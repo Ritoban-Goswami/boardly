@@ -1,6 +1,26 @@
+"use client";
 import Image from "next/image";
+import { signOut, onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect } from "react";
 
 export default function Home() {
+  const router = useRouter();
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.replace("/auth/login");
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
+
+  const handleLogout = useCallback(async () => {
+    await signOut(auth);
+    router.push("auth/login");
+  }, [router]);
+
   return (
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
@@ -50,6 +70,12 @@ export default function Home() {
             Read our docs
           </a>
         </div>
+        <a
+          className="underline underline-offset-4 cursor-pointer"
+          onClick={handleLogout}
+        >
+          Logout
+        </a>
       </main>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
         <a
