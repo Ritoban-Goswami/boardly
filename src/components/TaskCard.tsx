@@ -1,67 +1,89 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CalendarDays } from "lucide-react";
-import type { Task, User } from "@/lib/data";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
+import { Button } from "./ui/button";
+import { Pencil, Trash2, Tag } from "lucide-react";
 
 export default function TaskCard({
   task,
-  users,
+  onClick,
+  onEdit,
+  onDelete,
 }: {
   task: Task;
-  users: User[];
+  onClick: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
-  const assignee = users.find((u) => u.id === task.assigneeId);
-  const due = task.dueDate ? new Date(task.dueDate) : null;
-
+  const priorityColors: Record<Task["priority"], string> = {
+    low: "bg-emerald-100 text-emerald-700",
+    medium: "bg-amber-100 text-amber-700",
+    high: "bg-rose-100 text-rose-700",
+  };
   return (
-    <Card className="p-3 hover:shadow-sm transition-shadow rounded-lg">
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="text-sm font-medium leading-snug">{task.title}</h3>
-        <span
-          className={cn(
-            "text-[10px] px-2 py-0.5 rounded-full border",
-            task.status === "done" &&
-              "bg-emerald-50 text-emerald-700 border-emerald-200",
-            task.status === "inprogress" &&
-              "bg-amber-50 text-amber-700 border-amber-200",
-            task.status === "todo" &&
-              "bg-slate-50 text-slate-700 border-slate-200"
-          )}
-        >
-          {task.status === "inprogress"
-            ? "In Progress"
-            : task.status === "todo"
-            ? "To Do"
-            : "Done"}
-        </span>
-      </div>
-      <div className="mt-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Avatar className="h-6 w-6">
-            <AvatarImage
-              src={`/placeholder.svg?height=48&width=48&query=${encodeURIComponent(
-                (assignee?.name ?? "User") + " avatar"
-              )}`}
-              alt={`${assignee?.name ?? "Assignee"} avatar`}
-            />
-            <AvatarFallback>
-              {assignee?.name?.slice(0, 2).toUpperCase() ?? "US"}
-            </AvatarFallback>
-          </Avatar>
-          <span className="text-xs text-muted-foreground">
-            {assignee?.name ?? "Unassigned"}
-          </span>
-        </div>
-        {due && (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <CalendarDays className="w-3.5 h-3.5" />
-            <time dateTime={due.toISOString()}>{due.toLocaleDateString()}</time>
+    <Card
+      className={cn("group relative w-full transition-shadow hover:shadow-sm")}
+      onClick={onClick}
+      role="button"
+    >
+      <CardContent className="p-3">
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <div className="truncate font-medium">{task.title}</div>
+              <Badge
+                className={cn(
+                  "h-5 px-1.5 text-[10px]",
+                  priorityColors[task.priority]
+                )}
+              >
+                {task.priority}
+              </Badge>
+            </div>
+            {task.description ? (
+              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                {task.description}
+              </p>
+            ) : null}
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {task.labels?.map((l) => (
+                <Badge key={l} variant="secondary" className="bg-gray-100">
+                  <Tag className="mr-1 h-3 w-3" />
+                  {l}
+                </Badge>
+              ))}
+            </div>
           </div>
-        )}
-      </div>
+          <div className="ml-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 hover:bg-muted"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+              <span className="sr-only">Edit</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 hover:bg-destructive/10"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
+              <span className="sr-only">Delete</span>
+            </Button>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
 }

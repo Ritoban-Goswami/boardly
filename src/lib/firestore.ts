@@ -16,17 +16,9 @@ import {
 const tasksCol = collection(db, "tasks");
 
 // Create Task
-export const addTask = async ({
-  title,
-  description = "",
-  status = "todo",
-  createdBy,
-}) => {
+export const addTask = async (values) => {
   return await addDoc(tasksCol, {
-    title,
-    description,
-    status,
-    createdBy,
+    ...values,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
