@@ -58,12 +58,9 @@ export function SignupForm({
               <span className="sr-only">Acme Inc.</span>
             </a>
             <h1 className="text-xl font-bold">Create your account</h1>
-            <div className="text-center text-sm">
-              Already have an account?{" "}
-              <a href="/login" className="underline underline-offset-4">
-                Log in
-              </a>
-            </div>
+            <h2 className="text-sm font-medium">
+              Sign up to start managing tasks collaboratively
+            </h2>
           </div>
           <div className="flex flex-col gap-6">
             <div className="grid gap-3">
@@ -97,12 +94,18 @@ export function SignupForm({
               {loading ? "Signing up..." : "Sign up"}
             </Button>
           </div>
-          <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
+          <div className="text-center text-sm">
+            Already have an account?{" "}
+            <a href="/login" className="underline underline-offset-4">
+              Log in
+            </a>
+          </div>
+          {/* <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
             <span className="bg-background text-muted-foreground relative z-10 px-2">
               Or
             </span>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          </div> */}
+          {/* <div className="grid gap-4 sm:grid-cols-2">
             <Button variant="outline" type="button" className="w-full">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                 <path
@@ -121,7 +124,7 @@ export function SignupForm({
               </svg>
               Continue with Google
             </Button>
-          </div>
+          </div> */}
         </div>
       </form>
       <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
