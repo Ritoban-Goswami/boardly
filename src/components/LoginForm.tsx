@@ -1,12 +1,10 @@
 "use client";
-
 import { useState, useEffect } from "react";
-import {
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-} from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+
 import { GalleryVerticalEnd } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -14,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function SignupForm({
+export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -23,25 +21,23 @@ export function SignupForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const [user, authLoading] = useAuthState(auth);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        router.replace("/");
-      }
-    });
-    return () => unsubscribe();
-  }, [router]);
+    if (!authLoading && user) {
+      router.replace("/");
+    }
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email, password);
       router.push("/");
     } catch (err: any) {
-      setError(err.message || "Signup failed");
+      setError(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -61,11 +57,11 @@ export function SignupForm({
               </div>
               <span className="sr-only">Acme Inc.</span>
             </a>
-            <h1 className="text-xl font-bold">Create your account</h1>
+            <h1 className="text-xl font-bold">Welcome to Acme Inc.</h1>
             <div className="text-center text-sm">
-              Already have an account?{" "}
-              <a href="/login" className="underline underline-offset-4">
-                Log in
+              Don&apos;t have an account?{" "}
+              <a href="/auth/signup" className="underline underline-offset-4">
+                Sign up
               </a>
             </div>
           </div>
@@ -98,7 +94,7 @@ export function SignupForm({
               <div className="text-red-500 text-sm text-center">{error}</div>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing up..." : "Sign up"}
+              {loading ? "Logging in..." : "Login"}
             </Button>
           </div>
           <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
