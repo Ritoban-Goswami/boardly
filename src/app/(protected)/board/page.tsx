@@ -3,18 +3,12 @@ import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { useTasksStore } from "@/store/useTasks";
 import KanbanBoard from "@/components/KanbanBoard";
 import Navbar from "@/components/Navbar";
 
 export default function Home() {
   const router = useRouter();
   const [user, loading] = useAuthState(auth);
-
-  useEffect(() => {
-    const unsub = useTasksStore.getState().initListener();
-    return () => unsub();
-  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
