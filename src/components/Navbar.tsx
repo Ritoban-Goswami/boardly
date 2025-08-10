@@ -24,10 +24,13 @@ import ShortcutHelp from "./ShortcutHelp";
 import { useCallback, useRef, useState } from "react";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { getInitials, stringToColor } from "@/lib/utils";
 
 export default function Navbar() {
   const router = useRouter();
   const [helpOpen, setHelpOpen] = useState(false);
+  const [user] = useAuthState(auth);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleLogout = useCallback(async () => {
@@ -42,7 +45,7 @@ export default function Navbar() {
           <Link href="/board" className="flex items-center gap-2">
             <CheckSquare className="h-5 w-5 text-primary" />
             <span className="text-sm font-semibold tracking-tight">
-              TaskFlow
+              Boardly
             </span>
           </Link>
           <div className="flex items-center gap-2">
@@ -69,12 +72,17 @@ export default function Navbar() {
                   size="icon"
                   className="rounded-full hover:bg-muted"
                 >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src="/placeholder.svg?height=32&width=32"
-                      alt="User avatar"
-                    />
-                    <AvatarFallback>TF</AvatarFallback>
+                  <Avatar
+                    className="h-8 w-8"
+                    style={{
+                      backgroundColor: user
+                        ? stringToColor(user.uid)
+                        : "#e5e7eb",
+                    }}
+                  >
+                    <AvatarFallback className="bg-transparent">
+                      {getInitials(user)}
+                    </AvatarFallback>
                   </Avatar>
                   <span className="sr-only">Open menu</span>
                 </Button>

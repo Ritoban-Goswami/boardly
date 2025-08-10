@@ -1,13 +1,16 @@
 // components/KanbanBoard.tsx
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { useTasksStore } from "@/store/useTasks";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TaskCard from "./TaskCard";
 import DeleteDialog from "./DeleteDialog";
 import TaskDialog from "./TaskDialog";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Plus } from "lucide-react";
+import { usePresenceStore } from "@/store/usePresence";
+import { auth } from "@/lib/firebase";
+import { useTypingStore } from "@/store/useTyping";
+import { useTasksStore } from "@/store/useTasks";
 
 const columns = [
   { id: "todo", title: "To Do", accent: "blue" },
@@ -15,20 +18,44 @@ const columns = [
   { id: "done", title: "Done", accent: "green" },
 ];
 
-const users = [
-  { id: "u_1", name: "Alex Kim", isOnline: true },
-  { id: "u_2", name: "Sam Lee", isOnline: true },
-  { id: "u_3", name: "Jordan Park", isOnline: false },
-  { id: "u_4", name: "Taylor Ray", isOnline: false },
-];
-
 export default function KanbanBoard() {
   const { tasks, updateTask, deleteTask, addTask } = useTasksStore();
+  const { initListener: initPresence, setUserOnline } = usePresenceStore();
+  const { typing, initListener: initTyping, setTyping } = useTypingStore();
+
   const [dialogColumn, setDialogColumn] = useState<ColumnId>("todo");
   const [dialogTask, setDialogTask] = useState<Task>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  useEffect(() => {
+    const unsub = useTasksStore.getState().initListener();
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    // Set presence
+    if (auth.currentUser) {
+      setUserOnline(
+        auth.currentUser.uid,
+        auth.currentUser.email || "Anonymous"
+      );
+    }
+
+    // Listen for presence
+    const unsubPresence = initPresence();
+
+    // Listen for typing on a given task
+    const unsubTyping = initTyping("taskId1");
+
+    return () => {
+      unsubPresence();
+      unsubTyping();
+    };
+  }, []);
+
+  console.log("typing", typing);
 
   const onDragEnd = (result) => {
     const { destination, source, draggableId } = result;

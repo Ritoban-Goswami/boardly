@@ -59,7 +59,7 @@ export function LoginForm({
             </a>
             <h1 className="text-xl font-bold">Welcome to Acme Inc.</h1>
             <h2 className="text-sm font-medium">
-              Log in to your TaskFlow account
+              Log in to your Boardly account
             </h2>
           </div>
           <div className="flex flex-col gap-6">
