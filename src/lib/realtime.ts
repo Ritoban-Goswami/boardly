@@ -1,11 +1,17 @@
 // lib/realtime.ts
-import { ref, onValue, set, onDisconnect } from "firebase/database";
-import { auth, rtdb } from "./firebase";
+import { ref, onValue, set, onDisconnect } from 'firebase/database';
+import { auth, rtdb } from './firebase';
+
+interface PresenceData {
+  displayName: string;
+  online: boolean;
+  lastSeen: number;
+}
 
 // Presence
 export const setUserPresence = (userId: string, displayName: string) => {
   const userRef = ref(rtdb, `presence/${userId}`);
-  const presenceData = {
+  const presenceData: PresenceData = {
     displayName,
     online: true,
     lastSeen: Date.now(),
@@ -22,10 +28,8 @@ export const setUserPresence = (userId: string, displayName: string) => {
   });
 };
 
-export const listenToPresence = (
-  callback: (presence: Record<string, any>) => void
-) => {
-  const presenceRef = ref(rtdb, "presence");
+export const listenToPresence = (callback: (presence: Record<string, PresenceData>) => void) => {
+  const presenceRef = ref(rtdb, 'presence');
   return onValue(presenceRef, (snapshot) => {
     callback(snapshot.val() || {});
   });
@@ -40,7 +44,7 @@ export const setTypingStatus = (taskId: string, isTyping: boolean) => {
 };
 
 export const listenToTyping = (
-  callback: (typingUsers: Record<string, boolean>) => void
+  callback: (typingUsers: Record<string, Record<string, boolean>>) => void
 ) => {
   const typingRef = ref(rtdb, `typing`);
   return onValue(typingRef, (snapshot) => {

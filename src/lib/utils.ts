@@ -1,20 +1,18 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 // Function to get initials from display name or email
-export const getInitials = (user: User | null) => {
-  if (!user) return "U";
+export const getInitials = (
+  user: { displayName?: string | null; email?: string | null } | null | undefined
+) => {
+  if (!user) return 'U';
 
   // Try to get initials from displayName
   if (user.displayName) {
     return user.displayName
-      .split(" ")
+      .split(' ')
       .map((n) => n[0])
-      .join("")
+      .join('')
       .toUpperCase()
       .substring(0, 2);
   }
@@ -24,7 +22,7 @@ export const getInitials = (user: User | null) => {
     return user.email[0].toUpperCase();
   }
 
-  return "U";
+  return 'U';
 };
 
 // Function to generate a consistent color from a string
@@ -38,3 +36,7 @@ export const stringToColor = (str: string) => {
   const hue = hash % 360;
   return `hsl(${hue}, 70%, 80%)`;
 };
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}

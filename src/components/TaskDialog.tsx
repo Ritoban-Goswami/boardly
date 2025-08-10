@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { ColumnId, Task } from '@/lib/types';
+import type { Task, ColumnId } from '@/store/useTasks';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { getInitials, stringToColor } from '@/lib/utils';
@@ -44,7 +44,7 @@ export default function TaskDialog({
   open?: boolean;
   onOpenChange?: (o: boolean) => void;
   mode?: 'add' | 'edit';
-  initialTask?: Task;
+  initialTask?: Task | null;
   onSubmit?: (values: Partial<Task>) => void;
   column?: ColumnId;
   usersViewing?: UserInfo[];
@@ -97,7 +97,7 @@ export default function TaskDialog({
         <DialogDescription>
           {mode === 'add' ? 'Create a new task' : 'Update task details'} in{' '}
           <span className="font-medium">
-            {column === 'todo' ? 'To Do' : column === 'inprogress' ? 'In Progress' : 'Done'}
+            {column === 'todo' ? 'To Do' : column === 'in-progress' ? 'In Progress' : 'Done'}
           </span>
           {usersViewing.length > 0 && (
             <div

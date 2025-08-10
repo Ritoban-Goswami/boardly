@@ -1,5 +1,5 @@
 // components/KanbanBoard.tsx
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import React, { useEffect, useState, useMemo } from 'react';
 import TaskCard from './TaskCard';
 import DeleteDialog from './DeleteDialog';
@@ -7,27 +7,26 @@ import TaskDialog from './TaskDialog';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { Plus } from 'lucide-react';
-import { useTasksStore } from '@/store/useTasks';
+import { useTasksStore, Task, ColumnId } from '@/store/useTasks';
 import { useTypingStore } from '@/store/useTyping';
 import { auth } from '@/lib/firebase';
 import { usePresenceStore } from '@/store/usePresence';
 
 const columns = [
-  { id: 'todo', title: 'To Do', accent: 'blue' },
-  { id: 'in_progress', title: 'In Progress', accent: 'yellow' },
-  { id: 'done', title: 'Done', accent: 'green' },
+  { id: 'todo' as const, title: 'To Do', accent: 'blue' as const },
+  { id: 'in-progress' as const, title: 'In Progress', accent: 'yellow' as const },
+  { id: 'done' as const, title: 'Done', accent: 'green' as const },
 ];
 
-type TaskViewer = {
+interface TaskViewer {
   id: string;
   displayName: string;
-};
+}
 
 export default function KanbanBoard() {
   const { tasks, updateTask, deleteTask, addTask } = useTasksStore();
-
   const [dialogColumn, setDialogColumn] = useState<ColumnId>('todo');
-  const [dialogTask, setDialogTask] = useState<Task>(null);
+  const [dialogTask, setDialogTask] = useState<Task>();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -54,17 +53,19 @@ export default function KanbanBoard() {
     return () => unsub();
   }, []);
 
-  const onDragEnd = (result) => {
+  const onDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
     if (!destination) return;
     if (destination.droppableId !== source.droppableId) {
-      updateTask(draggableId, { status: destination.droppableId });
+      // Ensure the status is one of the allowed values
+      const status = destination.droppableId as Task['status'];
+      updateTask(draggableId, { status });
     }
   };
 
   function openAdd(column: ColumnId) {
     setDialogMode('add');
-    setDialogTask(null);
+    setDialogTask(undefined);
     setDialogColumn(column);
     setDialogOpen(true);
   }
@@ -90,9 +91,16 @@ export default function KanbanBoard() {
 
   async function handleSave(values: Partial<Task>) {
     if (dialogMode === 'add') {
+      if (!values.title) {
+        console.error('Title is required');
+        return;
+      }
       await addTask({
-        ...values,
+        title: values.title,
+        description: values.description || '',
         status: dialogColumn,
+        priority: values.priority || 'medium', // Add default priority
+        labels: values.labels || [], // Add default labels
       });
     } else if (dialogMode === 'edit' && dialogTask) {
       await updateTask(dialogTask.id, values);
@@ -142,7 +150,7 @@ export default function KanbanBoard() {
         initialTask={dialogTask}
         onSubmit={handleSave}
         column={dialogColumn}
-        usersViewing={taskViewers[dialogTask?.id] || []}
+        usersViewing={dialogTask?.id ? taskViewers[dialogTask.id] || [] : []}
       />
 
       <DeleteDialog

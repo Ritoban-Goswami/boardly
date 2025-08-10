@@ -1,32 +1,48 @@
 // store/useTasks.ts
-import { create } from "zustand";
-import {
-  listenToTasks,
-  addTask,
-  updateTask,
-  deleteTask,
-} from "@/lib/firestore";
+import { create } from 'zustand';
+import { listenToTasks, addTask, updateTask, deleteTask } from '@/lib/firestore';
 
-export const useTasksStore = create((set, get) => ({
+export type ColumnId = 'todo' | 'in-progress' | 'done' | 'review';
+
+export interface Task {
+  id: string;
+  title: string;
+  status: ColumnId;
+  description?: string;
+  priority: 'low' | 'medium' | 'high';
+  labels?: string[];
+  // Add other task properties as needed
+}
+
+interface TasksState {
+  tasks: Task[];
+  loading: boolean;
+  initListener: () => () => void;
+  addTask: (data: Omit<Task, 'id'>) => Promise<void>;
+  updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
+}
+
+export const useTasksStore = create<TasksState>((set) => ({
   tasks: [],
   loading: true,
 
   initListener: () => {
-    const unsub = listenToTasks((tasks) => {
+    const unsub = listenToTasks((tasks: Task[]) => {
       set({ tasks, loading: false });
     });
     return unsub;
   },
 
-  addTask: async (data) => {
+  addTask: async (data: Omit<Task, 'id'>) => {
     await addTask(data);
   },
 
-  updateTask: async (id, updates) => {
+  updateTask: async (id: string, updates: Partial<Task>) => {
     await updateTask(id, updates);
   },
 
-  deleteTask: async (id) => {
+  deleteTask: async (id: string) => {
     await deleteTask(id);
   },
 }));

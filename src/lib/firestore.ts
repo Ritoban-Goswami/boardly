@@ -1,5 +1,6 @@
 // lib/firestore.ts
-import { db } from "./firebase";
+import { db } from './firebase';
+import { Task, ColumnId } from '@/store/useTasks';
 import {
   collection,
   addDoc,
@@ -10,13 +11,13 @@ import {
   query,
   orderBy,
   serverTimestamp,
-} from "firebase/firestore";
+} from 'firebase/firestore';
 
 // COLLECTION REFERENCE
-const tasksCol = collection(db, "tasks");
+const tasksCol = collection(db, 'tasks');
 
 // Create Task
-export const addTask = async (values) => {
+export const addTask = async (values: Omit<Task, 'id'>) => {
   return await addDoc(tasksCol, {
     ...values,
     createdAt: serverTimestamp(),
@@ -25,8 +26,8 @@ export const addTask = async (values) => {
 };
 
 // Update Task
-export const updateTask = async (taskId, updates) => {
-  const taskRef = doc(db, "tasks", taskId);
+export const updateTask = async (taskId: string, updates: Partial<Omit<Task, 'id'>>) => {
+  const taskRef = doc(db, 'tasks', taskId);
   return await updateDoc(taskRef, {
     ...updates,
     updatedAt: serverTimestamp(),
@@ -34,17 +35,20 @@ export const updateTask = async (taskId, updates) => {
 };
 
 // Delete Task
-export const deleteTask = async (taskId) => {
-  const taskRef = doc(db, "tasks", taskId);
+export const deleteTask = async (taskId: string) => {
+  const taskRef = doc(db, 'tasks', taskId);
   return await deleteDoc(taskRef);
 };
 
 // Get Tasks (Real-time listener)
-export const listenToTasks = (callback) => {
-  const q = query(tasksCol, orderBy("createdAt", "asc"));
+export const listenToTasks = (callback: (tasks: Task[]) => void) => {
+  const q = query(tasksCol, orderBy('createdAt', 'asc'));
   return onSnapshot(q, (snapshot) => {
     const tasks = snapshot.docs.map((doc) => ({
       id: doc.id,
+      title: '',
+      status: 'todo' as ColumnId,
+      priority: 'medium' as const,
       ...doc.data(),
     }));
     callback(tasks);

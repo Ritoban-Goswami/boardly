@@ -6,6 +6,7 @@ import { cn, getInitials, stringToColor } from '@/lib/utils';
 import { Button } from './ui/button';
 import { Pencil, Trash2, Tag } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import type { Task } from '@/store/useTasks';
 
 interface UserInfo {
   id: string;

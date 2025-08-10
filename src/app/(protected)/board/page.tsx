@@ -1,12 +1,12 @@
-"use client";
-import { auth } from "@/lib/firebase";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { useAuthState } from "react-firebase-hooks/auth";
-import KanbanBoard from "@/components/KanbanBoard";
-import Navbar from "@/components/Navbar";
-import { usePresenceStore } from "@/store/usePresence";
-import { useTypingStore } from "@/store/useTyping";
+'use client';
+import { auth } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import KanbanBoard from '@/components/KanbanBoard';
+import Navbar from '@/components/Navbar';
+import { usePresenceStore } from '@/store/usePresence';
+import { useTypingStore } from '@/store/useTyping';
 
 export default function Home() {
   const router = useRouter();
@@ -19,7 +19,7 @@ export default function Home() {
     if (auth.currentUser) {
       setUserOnline(
         auth.currentUser.uid,
-        auth.currentUser.displayName || auth.currentUser.email || "Anonymous"
+        auth.currentUser.displayName || auth.currentUser.email || 'Anonymous'
       );
     }
 
@@ -31,11 +31,11 @@ export default function Home() {
       unsubPresence();
       unsubTyping();
     };
-  }, []);
+  }, [initPresence, initTyping, setUserOnline]);
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/auth/login");
+      router.replace('/auth/login');
     }
   }, [user, loading, router]);
 
