@@ -1,61 +1,58 @@
 // components/KanbanBoard.tsx
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import React, { useEffect, useState } from "react";
-import TaskCard from "./TaskCard";
-import DeleteDialog from "./DeleteDialog";
-import TaskDialog from "./TaskDialog";
-import { cn } from "@/lib/utils";
-import { Button } from "./ui/button";
-import { Plus } from "lucide-react";
-import { usePresenceStore } from "@/store/usePresence";
-import { auth } from "@/lib/firebase";
-import { useTypingStore } from "@/store/useTyping";
-import { useTasksStore } from "@/store/useTasks";
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import React, { useEffect, useState, useMemo } from 'react';
+import TaskCard from './TaskCard';
+import DeleteDialog from './DeleteDialog';
+import TaskDialog from './TaskDialog';
+import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
+import { Plus } from 'lucide-react';
+import { useTasksStore } from '@/store/useTasks';
+import { useTypingStore } from '@/store/useTyping';
+import { auth } from '@/lib/firebase';
+import { usePresenceStore } from '@/store/usePresence';
 
 const columns = [
-  { id: "todo", title: "To Do", accent: "blue" },
-  { id: "in_progress", title: "In Progress", accent: "yellow" },
-  { id: "done", title: "Done", accent: "green" },
+  { id: 'todo', title: 'To Do', accent: 'blue' },
+  { id: 'in_progress', title: 'In Progress', accent: 'yellow' },
+  { id: 'done', title: 'Done', accent: 'green' },
 ];
+
+type TaskViewer = {
+  id: string;
+  displayName: string;
+};
 
 export default function KanbanBoard() {
   const { tasks, updateTask, deleteTask, addTask } = useTasksStore();
-  const { initListener: initPresence, setUserOnline } = usePresenceStore();
-  const { typing, initListener: initTyping, setTyping } = useTypingStore();
 
-  const [dialogColumn, setDialogColumn] = useState<ColumnId>("todo");
+  const [dialogColumn, setDialogColumn] = useState<ColumnId>('todo');
   const [dialogTask, setDialogTask] = useState<Task>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
+  const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { typing: allUsersViewing, setTyping } = useTypingStore();
+  const { presence } = usePresenceStore();
+
+  useEffect(() => {
+    // Only set typing status if we have a valid task ID
+    if (!dialogTask?.id) return;
+
+    // Set typing status when dialog opens/closes
+    setTyping(dialogTask.id, dialogOpen);
+
+    // Cleanup function to ensure typing status is cleared when component unmounts
+    return () => {
+      if (dialogOpen) {
+        setTyping(dialogTask.id, false);
+      }
+    };
+  }, [dialogOpen, dialogTask?.id, setTyping]);
 
   useEffect(() => {
     const unsub = useTasksStore.getState().initListener();
     return () => unsub();
   }, []);
-
-  useEffect(() => {
-    // Set presence
-    if (auth.currentUser) {
-      setUserOnline(
-        auth.currentUser.uid,
-        auth.currentUser.email || "Anonymous"
-      );
-    }
-
-    // Listen for presence
-    const unsubPresence = initPresence();
-
-    // Listen for typing on a given task
-    const unsubTyping = initTyping("taskId1");
-
-    return () => {
-      unsubPresence();
-      unsubTyping();
-    };
-  }, []);
-
-  console.log("typing", typing);
 
   const onDragEnd = (result) => {
     const { destination, source, draggableId } = result;
@@ -66,14 +63,14 @@ export default function KanbanBoard() {
   };
 
   function openAdd(column: ColumnId) {
-    setDialogMode("add");
+    setDialogMode('add');
     setDialogTask(null);
     setDialogColumn(column);
     setDialogOpen(true);
   }
 
   function openEdit(column: ColumnId, task: Task) {
-    setDialogMode("edit");
+    setDialogMode('edit');
     setDialogTask(task);
     setDialogColumn(column);
     setDialogOpen(true);
@@ -92,16 +89,32 @@ export default function KanbanBoard() {
   }
 
   async function handleSave(values: Partial<Task>) {
-    if (dialogMode === "add") {
+    if (dialogMode === 'add') {
       await addTask({
         ...values,
         status: dialogColumn,
       });
-    } else if (dialogMode === "edit" && dialogTask) {
+    } else if (dialogMode === 'edit' && dialogTask) {
       await updateTask(dialogTask.id, values);
     }
     setDialogOpen(false);
   }
+
+  // Create a mapping of taskId to array of user info objects
+  const taskViewers = useMemo(() => {
+    const result: Record<string, Array<{ id: string; displayName: string }>> = {};
+
+    Object.entries(allUsersViewing).forEach(([taskId, viewers]) => {
+      result[taskId] = Object.entries(viewers || {})
+        .filter(([userId, isViewing]) => isViewing && userId !== auth.currentUser?.uid)
+        .map(([userId]) => ({
+          id: userId,
+          displayName: presence[userId]?.displayName || 'User',
+        }));
+    });
+
+    return result;
+  }, [allUsersViewing, presence]);
 
   return (
     <>
@@ -117,6 +130,7 @@ export default function KanbanBoard() {
               onAdd={() => openAdd(col.id)}
               onEdit={(task) => openEdit(col.id, task)}
               onDelete={(task) => requestDelete(col.id, task)}
+              taskViewers={taskViewers}
             />
           ))}
         </div>
@@ -125,18 +139,16 @@ export default function KanbanBoard() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         mode={dialogMode}
-        initialTitle={dialogTask?.title ?? ""}
-        initialDescription={dialogTask?.description ?? ""}
-        initialLabels={dialogTask?.labels ?? []}
-        initialPriority={dialogTask?.priority ?? "medium"}
+        initialTask={dialogTask}
         onSubmit={handleSave}
         column={dialogColumn}
+        usersViewing={taskViewers[dialogTask?.id] || []}
       />
 
       <DeleteDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        title={dialogTask?.title ?? ""}
+        title={dialogTask?.title ?? ''}
         onConfirm={confirmDelete}
       />
     </>
@@ -147,60 +159,49 @@ const BoardColumn = React.forwardRef(function BoardColumn(
   props: {
     id: ColumnId;
     title: string;
-    accent: "blue" | "yellow" | "green";
+    accent: 'blue' | 'yellow' | 'green';
     tasks: Task[];
     onAdd: () => void;
     onEdit: (task: Task) => void;
     onDelete: (task: Task) => void;
+    taskViewers: Record<string, TaskViewer[]>;
   },
   ref: React.Ref<HTMLDivElement>
 ) {
-  const { id, title, accent, tasks, onAdd, onEdit, onDelete } = props;
+  const { id, title, accent, tasks, onAdd, onEdit, onDelete, taskViewers } = props;
   const accentClasses = {
     blue: {
-      bg: "bg-blue-50",
-      border: "border-blue-200",
-      title: "text-blue-700",
-      button: "hover:bg-blue-100",
+      bg: 'bg-blue-50',
+      border: 'border-blue-200',
+      title: 'text-blue-700',
+      button: 'hover:bg-blue-100',
     },
     yellow: {
-      bg: "bg-yellow-50",
-      border: "border-yellow-200",
-      title: "text-yellow-700",
-      button: "hover:bg-yellow-100",
+      bg: 'bg-yellow-50',
+      border: 'border-yellow-200',
+      title: 'text-yellow-700',
+      button: 'hover:bg-yellow-100',
     },
     green: {
-      bg: "bg-green-50",
-      border: "border-green-200",
-      title: "text-green-700",
-      button: "hover:bg-green-100",
+      bg: 'bg-green-50',
+      border: 'border-green-200',
+      title: 'text-green-700',
+      button: 'hover:bg-green-100',
     },
   }[accent];
 
   return (
-    <div
-      className={cn("snap-center snap-always w-[88%] shrink-0 md:w-auto")}
-      id={id}
-      ref={ref}
-    >
-      <div
-        className={cn(
-          "rounded-lg border",
-          accentClasses.border,
-          accentClasses.bg
-        )}
-      >
+    <div className={cn('snap-center snap-always w-[88%] shrink-0 md:w-auto')} id={id} ref={ref}>
+      <div className={cn('rounded-xl border', accentClasses.border, accentClasses.bg)}>
         <div className="flex items-center justify-between gap-2 px-3 py-2">
-          <h2 className={cn("text-sm font-semibold", accentClasses.title)}>
-            {title}
-          </h2>
+          <h2 className={cn('text-sm font-semibold', accentClasses.title)}>{title}</h2>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={onAdd}
               className={cn(
-                "h-8 gap-1 rounded-md text-xs active:scale-[0.98] transition",
+                'h-8 gap-1 rounded-md text-xs active:scale-[0.98] transition',
                 accentClasses.button
               )}
             >
@@ -215,7 +216,7 @@ const BoardColumn = React.forwardRef(function BoardColumn(
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="flex max-h-[70svh] flex-col gap-2 overflow-y-auto px-3 pb-3 pt-1"
+              className="flex max-h-[70svh] flex-col gap-2 overflow-y-auto px-3 pb-3"
             >
               {tasks.map((task, index) => (
                 <Draggable key={task.id} draggableId={task.id} index={index}>
@@ -228,6 +229,7 @@ const BoardColumn = React.forwardRef(function BoardColumn(
                     >
                       <TaskCard
                         task={task}
+                        usersViewing={taskViewers[task.id] || []}
                         onEdit={() => onEdit(task)}
                         onDelete={() => onDelete(task)}
                       />
@@ -237,9 +239,7 @@ const BoardColumn = React.forwardRef(function BoardColumn(
               ))}
               {provided.placeholder}
               {tasks.length === 0 ? (
-                <div className="py-8 text-center text-sm text-muted-foreground">
-                  No tasks yet
-                </div>
+                <div className="py-8 text-center text-sm text-muted-foreground">No tasks yet</div>
               ) : null}
             </div>
           )}

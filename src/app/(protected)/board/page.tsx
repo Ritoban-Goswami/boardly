@@ -5,10 +5,33 @@ import { useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import KanbanBoard from "@/components/KanbanBoard";
 import Navbar from "@/components/Navbar";
+import { usePresenceStore } from "@/store/usePresence";
+import { useTypingStore } from "@/store/useTyping";
 
 export default function Home() {
   const router = useRouter();
   const [user, loading] = useAuthState(auth);
+  const { initListener: initPresence, setUserOnline } = usePresenceStore();
+  const { initListener: initTyping } = useTypingStore();
+
+  useEffect(() => {
+    // Set presence
+    if (auth.currentUser) {
+      setUserOnline(
+        auth.currentUser.uid,
+        auth.currentUser.displayName || auth.currentUser.email || "Anonymous"
+      );
+    }
+
+    // Listen for presence
+    const unsubPresence = initPresence();
+    const unsubTyping = initTyping();
+
+    return () => {
+      unsubPresence();
+      unsubTyping();
+    };
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) {

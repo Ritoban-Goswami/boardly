@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { usePresenceStore } from "@/store/usePresence";
-import { getInitials, stringToColor } from "@/lib/utils";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/lib/firebase";
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { usePresenceStore } from '@/store/usePresence';
+import { getInitials, stringToColor } from '@/lib/utils';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase';
 
 export default function PresenceAvatars() {
   const { presence } = usePresenceStore();
@@ -33,9 +33,7 @@ export default function PresenceAvatars() {
           style={{
             backgroundColor: stringToColor(user.id),
           }}
-          title={`${user.displayName} (${
-            user.isOnline ? "Online" : "Offline"
-          })`}
+          title={`${user.displayName} (${user.isOnline ? 'Online' : 'Offline'})`}
         >
           <AvatarFallback className="bg-transparent text-[10px] font-bold uppercase">
             {getInitials(user)}
@@ -43,7 +41,7 @@ export default function PresenceAvatars() {
         </Avatar>
       ))}
       {onlineUsers.length === 0 ? (
-        <div className="text-xs text-muted-foreground">
+        <div className="hidden sm:flex text-xs text-muted-foreground">
           No other collaborators online
         </div>
       ) : null}

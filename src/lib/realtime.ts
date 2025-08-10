@@ -40,10 +40,9 @@ export const setTypingStatus = (taskId: string, isTyping: boolean) => {
 };
 
 export const listenToTyping = (
-  taskId: string,
   callback: (typingUsers: Record<string, boolean>) => void
 ) => {
-  const typingRef = ref(rtdb, `typing/${taskId}`);
+  const typingRef = ref(rtdb, `typing`);
   return onValue(typingRef, (snapshot) => {
     callback(snapshot.val() || {});
   });
