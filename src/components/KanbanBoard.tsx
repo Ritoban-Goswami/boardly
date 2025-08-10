@@ -1,16 +1,16 @@
 // components/KanbanBoard.tsx
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import TaskCard from "./TaskCard";
 import DeleteDialog from "./DeleteDialog";
 import TaskDialog from "./TaskDialog";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Plus } from "lucide-react";
-import { usePresenceStore } from "@/store/usePresence";
-import { auth } from "@/lib/firebase";
-import { useTypingStore } from "@/store/useTyping";
 import { useTasksStore } from "@/store/useTasks";
+import { useTypingStore } from "@/store/useTyping";
+import { auth } from "@/lib/firebase";
+import { usePresenceStore } from "@/store/usePresence";
 
 const columns = [
   { id: "todo", title: "To Do", accent: "blue" },
@@ -20,42 +20,34 @@ const columns = [
 
 export default function KanbanBoard() {
   const { tasks, updateTask, deleteTask, addTask } = useTasksStore();
-  const { initListener: initPresence, setUserOnline } = usePresenceStore();
-  const { typing, initListener: initTyping, setTyping } = useTypingStore();
 
   const [dialogColumn, setDialogColumn] = useState<ColumnId>("todo");
   const [dialogTask, setDialogTask] = useState<Task>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { typing: allUsersViewing, setTyping } = useTypingStore();
+  const { presence } = usePresenceStore();
+
+  useEffect(() => {
+    // Only set typing status if we have a valid task ID
+    if (!dialogTask?.id) return;
+
+    // Set typing status when dialog opens/closes
+    setTyping(dialogTask.id, dialogOpen);
+
+    // Cleanup function to ensure typing status is cleared when component unmounts
+    return () => {
+      if (dialogOpen) {
+        setTyping(dialogTask.id, false);
+      }
+    };
+  }, [dialogOpen, dialogTask?.id, setTyping]);
 
   useEffect(() => {
     const unsub = useTasksStore.getState().initListener();
     return () => unsub();
   }, []);
-
-  useEffect(() => {
-    // Set presence
-    if (auth.currentUser) {
-      setUserOnline(
-        auth.currentUser.uid,
-        auth.currentUser.email || "Anonymous"
-      );
-    }
-
-    // Listen for presence
-    const unsubPresence = initPresence();
-
-    // Listen for typing on a given task
-    const unsubTyping = initTyping("taskId1");
-
-    return () => {
-      unsubPresence();
-      unsubTyping();
-    };
-  }, []);
-
-  console.log("typing", typing);
 
   const onDragEnd = (result) => {
     const { destination, source, draggableId } = result;
@@ -103,6 +95,27 @@ export default function KanbanBoard() {
     setDialogOpen(false);
   }
 
+  // Create a mapping of taskId to array of user info objects
+  const taskViewers = useMemo(() => {
+    const result: Record<
+      string,
+      Array<{ id: string; displayName: string }>
+    > = {};
+
+    Object.entries(allUsersViewing).forEach(([taskId, viewers]) => {
+      result[taskId] = Object.entries(viewers || {})
+        .filter(
+          ([userId, isViewing]) => isViewing && userId !== auth.currentUser?.uid
+        )
+        .map(([userId]) => ({
+          id: userId,
+          displayName: presence[userId]?.displayName || "User",
+        }));
+    });
+
+    return result;
+  }, [allUsersViewing, presence]);
+
   return (
     <>
       <DragDropContext onDragEnd={onDragEnd}>
@@ -117,6 +130,7 @@ export default function KanbanBoard() {
               onAdd={() => openAdd(col.id)}
               onEdit={(task) => openEdit(col.id, task)}
               onDelete={(task) => requestDelete(col.id, task)}
+              taskViewers={taskViewers}
             />
           ))}
         </div>
@@ -125,12 +139,10 @@ export default function KanbanBoard() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         mode={dialogMode}
-        initialTitle={dialogTask?.title ?? ""}
-        initialDescription={dialogTask?.description ?? ""}
-        initialLabels={dialogTask?.labels ?? []}
-        initialPriority={dialogTask?.priority ?? "medium"}
+        initialTask={dialogTask}
         onSubmit={handleSave}
         column={dialogColumn}
+        usersViewing={taskViewers[dialogTask?.id] || []}
       />
 
       <DeleteDialog
@@ -152,10 +164,12 @@ const BoardColumn = React.forwardRef(function BoardColumn(
     onAdd: () => void;
     onEdit: (task: Task) => void;
     onDelete: (task: Task) => void;
+    taskViewers: any;
   },
   ref: React.Ref<HTMLDivElement>
 ) {
-  const { id, title, accent, tasks, onAdd, onEdit, onDelete } = props;
+  const { id, title, accent, tasks, onAdd, onEdit, onDelete, taskViewers } =
+    props;
   const accentClasses = {
     blue: {
       bg: "bg-blue-50",
@@ -228,6 +242,7 @@ const BoardColumn = React.forwardRef(function BoardColumn(
                     >
                       <TaskCard
                         task={task}
+                        usersViewing={taskViewers[task.id] || []}
                         onEdit={() => onEdit(task)}
                         onDelete={() => onDelete(task)}
                       />

@@ -5,8 +5,8 @@ import { listenToTyping, setTypingStatus } from "@/lib/realtime";
 export const useTypingStore = create((set) => ({
   typing: {},
 
-  initListener: (taskId) => {
-    const unsub = listenToTyping(taskId, (typing) => {
+  initListener: () => {
+    const unsub = listenToTyping((typing) => {
       set({ typing });
     });
     return unsub;

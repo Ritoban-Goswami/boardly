@@ -23,42 +23,49 @@ import {
 } from "@/components/ui/select";
 import type { ColumnId, Task } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { getInitials, stringToColor } from "@/lib/utils";
+
+interface UserInfo {
+  id: string;
+  displayName: string;
+}
 
 export default function TaskDialog({
   open = false,
   onOpenChange = () => {},
   mode = "add",
-  initialTitle = "",
-  initialDescription = "",
-  initialLabels = [],
-  initialPriority = "medium",
+  initialTask = null,
   onSubmit = () => {},
   column = "todo",
+  usersViewing = [],
 }: {
   open?: boolean;
   onOpenChange?: (o: boolean) => void;
   mode?: "add" | "edit";
-  initialTitle?: string;
-  initialDescription?: string;
-  initialLabels?: string[];
-  initialPriority?: Task["priority"];
+  initialTask?: Task;
   onSubmit?: (values: Partial<Task>) => void;
   column?: ColumnId;
+  usersViewing?: UserInfo[];
 }) {
-  const [title, setTitle] = useState(initialTitle);
-  const [description, setDescription] = useState(initialDescription);
-  const [labels, setLabels] = useState<string[]>(initialLabels);
+  const [title, setTitle] = useState(initialTask?.title ?? "");
+  const [description, setDescription] = useState(
+    initialTask?.description ?? ""
+  );
+  const [labels, setLabels] = useState<string[]>(initialTask?.labels ?? []);
   const [labelInput, setLabelInput] = useState("");
-  const [priority, setPriority] = useState<Task["priority"]>(initialPriority);
+  const [priority, setPriority] = useState<Task["priority"]>(
+    initialTask?.priority ?? "medium"
+  );
 
   useEffect(() => {
     if (open) {
-      setTitle(initialTitle);
-      setDescription(initialDescription);
-      setLabels(initialLabels);
-      setPriority(initialPriority);
+      setTitle(initialTask?.title ?? "");
+      setDescription(initialTask?.description ?? "");
+      setLabels(initialTask?.labels ?? []);
+      setPriority(initialTask?.priority ?? "medium");
     }
-  }, [open, initialTitle, initialDescription, initialLabels, initialPriority]);
+  }, [open, initialTask]);
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -86,18 +93,44 @@ export default function TaskDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{mode === "add" ? "Add Task" : "Edit Task"}</DialogTitle>
-          <DialogDescription>
-            {mode === "add" ? "Create a new task" : "Update task details"} in{" "}
-            <span className="font-medium">
-              {column === "todo"
-                ? "To Do"
-                : column === "inprogress"
-                ? "In Progress"
-                : "Done"}
-            </span>
-          </DialogDescription>
+          <div className="flex items-center justify-between">
+            <DialogTitle>
+              {mode === "add" ? "Add Task" : "Edit Task"}
+            </DialogTitle>
+            {usersViewing.length > 0 && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <span className="flex -space-x-2">
+                  {usersViewing.slice(0, 3).map((user) => (
+                    <Avatar
+                      key={user.id}
+                      className="h-5 w-5 border-2 border-background"
+                      style={{ backgroundColor: stringToColor(user.id) }}
+                      title={user.displayName}
+                    >
+                      <AvatarFallback className="text-[10px] bg-transparent">
+                        {getInitials(user)}
+                      </AvatarFallback>
+                    </Avatar>
+                  ))}
+                </span>
+                {usersViewing.length > 3 && (
+                  <span className="ml-1">+{usersViewing.length - 3} more</span>
+                )}
+                <span>viewing</span>
+              </div>
+            )}
+          </div>
         </DialogHeader>
+        <DialogDescription>
+          {mode === "add" ? "Create a new task" : "Update task details"} in{" "}
+          <span className="font-medium">
+            {column === "todo"
+              ? "To Do"
+              : column === "inprogress"
+              ? "In Progress"
+              : "Done"}
+          </span>
+        </DialogDescription>
         <form onSubmit={handleSave} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="task-title">Title</Label>

@@ -2,20 +2,28 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn, getInitials, stringToColor } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Pencil, Trash2, Tag } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
+interface UserInfo {
+  id: string;
+  displayName: string;
+}
 
 export default function TaskCard({
   task,
   onClick,
   onEdit,
   onDelete,
+  usersViewing,
 }: {
   task: Task;
   onClick: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  usersViewing: UserInfo[];
 }) {
   const priorityColors: Record<Task["priority"], string> = {
     low: "bg-emerald-100 text-emerald-700",
@@ -55,6 +63,23 @@ export default function TaskCard({
                 </Badge>
               ))}
             </div>
+            {/* User avatars for viewers */}
+            {usersViewing.length > 0 && (
+              <div className="mt-2 flex -space-x-2">
+                {usersViewing.map((user) => (
+                  <Avatar
+                    key={user.id}
+                    className="h-6 w-6 border-2 border-background"
+                    style={{ backgroundColor: stringToColor(user.id) }}
+                    title={`${user.displayName} (Viewing)`}
+                  >
+                    <AvatarFallback className="text-[10px] bg-transparent">
+                      {getInitials(user)}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+              </div>
+            )}
           </div>
           <div className="ml-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
             <Button
