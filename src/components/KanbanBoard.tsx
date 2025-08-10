@@ -1,30 +1,35 @@
 // components/KanbanBoard.tsx
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import React, { useEffect, useState, useMemo } from "react";
-import TaskCard from "./TaskCard";
-import DeleteDialog from "./DeleteDialog";
-import TaskDialog from "./TaskDialog";
-import { cn } from "@/lib/utils";
-import { Button } from "./ui/button";
-import { Plus } from "lucide-react";
-import { useTasksStore } from "@/store/useTasks";
-import { useTypingStore } from "@/store/useTyping";
-import { auth } from "@/lib/firebase";
-import { usePresenceStore } from "@/store/usePresence";
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import React, { useEffect, useState, useMemo } from 'react';
+import TaskCard from './TaskCard';
+import DeleteDialog from './DeleteDialog';
+import TaskDialog from './TaskDialog';
+import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
+import { Plus } from 'lucide-react';
+import { useTasksStore } from '@/store/useTasks';
+import { useTypingStore } from '@/store/useTyping';
+import { auth } from '@/lib/firebase';
+import { usePresenceStore } from '@/store/usePresence';
 
 const columns = [
-  { id: "todo", title: "To Do", accent: "blue" },
-  { id: "in_progress", title: "In Progress", accent: "yellow" },
-  { id: "done", title: "Done", accent: "green" },
+  { id: 'todo', title: 'To Do', accent: 'blue' },
+  { id: 'in_progress', title: 'In Progress', accent: 'yellow' },
+  { id: 'done', title: 'Done', accent: 'green' },
 ];
+
+type TaskViewer = {
+  id: string;
+  displayName: string;
+};
 
 export default function KanbanBoard() {
   const { tasks, updateTask, deleteTask, addTask } = useTasksStore();
 
-  const [dialogColumn, setDialogColumn] = useState<ColumnId>("todo");
+  const [dialogColumn, setDialogColumn] = useState<ColumnId>('todo');
   const [dialogTask, setDialogTask] = useState<Task>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
+  const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
   const [dialogOpen, setDialogOpen] = useState(false);
   const { typing: allUsersViewing, setTyping } = useTypingStore();
   const { presence } = usePresenceStore();
@@ -58,14 +63,14 @@ export default function KanbanBoard() {
   };
 
   function openAdd(column: ColumnId) {
-    setDialogMode("add");
+    setDialogMode('add');
     setDialogTask(null);
     setDialogColumn(column);
     setDialogOpen(true);
   }
 
   function openEdit(column: ColumnId, task: Task) {
-    setDialogMode("edit");
+    setDialogMode('edit');
     setDialogTask(task);
     setDialogColumn(column);
     setDialogOpen(true);
@@ -84,12 +89,12 @@ export default function KanbanBoard() {
   }
 
   async function handleSave(values: Partial<Task>) {
-    if (dialogMode === "add") {
+    if (dialogMode === 'add') {
       await addTask({
         ...values,
         status: dialogColumn,
       });
-    } else if (dialogMode === "edit" && dialogTask) {
+    } else if (dialogMode === 'edit' && dialogTask) {
       await updateTask(dialogTask.id, values);
     }
     setDialogOpen(false);
@@ -97,19 +102,14 @@ export default function KanbanBoard() {
 
   // Create a mapping of taskId to array of user info objects
   const taskViewers = useMemo(() => {
-    const result: Record<
-      string,
-      Array<{ id: string; displayName: string }>
-    > = {};
+    const result: Record<string, Array<{ id: string; displayName: string }>> = {};
 
     Object.entries(allUsersViewing).forEach(([taskId, viewers]) => {
       result[taskId] = Object.entries(viewers || {})
-        .filter(
-          ([userId, isViewing]) => isViewing && userId !== auth.currentUser?.uid
-        )
+        .filter(([userId, isViewing]) => isViewing && userId !== auth.currentUser?.uid)
         .map(([userId]) => ({
           id: userId,
-          displayName: presence[userId]?.displayName || "User",
+          displayName: presence[userId]?.displayName || 'User',
         }));
     });
 
@@ -148,7 +148,7 @@ export default function KanbanBoard() {
       <DeleteDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        title={dialogTask?.title ?? ""}
+        title={dialogTask?.title ?? ''}
         onConfirm={confirmDelete}
       />
     </>
@@ -159,62 +159,49 @@ const BoardColumn = React.forwardRef(function BoardColumn(
   props: {
     id: ColumnId;
     title: string;
-    accent: "blue" | "yellow" | "green";
+    accent: 'blue' | 'yellow' | 'green';
     tasks: Task[];
     onAdd: () => void;
     onEdit: (task: Task) => void;
     onDelete: (task: Task) => void;
-    taskViewers: any;
+    taskViewers: Record<string, TaskViewer[]>;
   },
   ref: React.Ref<HTMLDivElement>
 ) {
-  const { id, title, accent, tasks, onAdd, onEdit, onDelete, taskViewers } =
-    props;
+  const { id, title, accent, tasks, onAdd, onEdit, onDelete, taskViewers } = props;
   const accentClasses = {
     blue: {
-      bg: "bg-blue-50",
-      border: "border-blue-200",
-      title: "text-blue-700",
-      button: "hover:bg-blue-100",
+      bg: 'bg-blue-50',
+      border: 'border-blue-200',
+      title: 'text-blue-700',
+      button: 'hover:bg-blue-100',
     },
     yellow: {
-      bg: "bg-yellow-50",
-      border: "border-yellow-200",
-      title: "text-yellow-700",
-      button: "hover:bg-yellow-100",
+      bg: 'bg-yellow-50',
+      border: 'border-yellow-200',
+      title: 'text-yellow-700',
+      button: 'hover:bg-yellow-100',
     },
     green: {
-      bg: "bg-green-50",
-      border: "border-green-200",
-      title: "text-green-700",
-      button: "hover:bg-green-100",
+      bg: 'bg-green-50',
+      border: 'border-green-200',
+      title: 'text-green-700',
+      button: 'hover:bg-green-100',
     },
   }[accent];
 
   return (
-    <div
-      className={cn("snap-center snap-always w-[88%] shrink-0 md:w-auto")}
-      id={id}
-      ref={ref}
-    >
-      <div
-        className={cn(
-          "rounded-lg border",
-          accentClasses.border,
-          accentClasses.bg
-        )}
-      >
+    <div className={cn('snap-center snap-always w-[88%] shrink-0 md:w-auto')} id={id} ref={ref}>
+      <div className={cn('rounded-xl border', accentClasses.border, accentClasses.bg)}>
         <div className="flex items-center justify-between gap-2 px-3 py-2">
-          <h2 className={cn("text-sm font-semibold", accentClasses.title)}>
-            {title}
-          </h2>
+          <h2 className={cn('text-sm font-semibold', accentClasses.title)}>{title}</h2>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={onAdd}
               className={cn(
-                "h-8 gap-1 rounded-md text-xs active:scale-[0.98] transition",
+                'h-8 gap-1 rounded-md text-xs active:scale-[0.98] transition',
                 accentClasses.button
               )}
             >
@@ -229,7 +216,7 @@ const BoardColumn = React.forwardRef(function BoardColumn(
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="flex max-h-[70svh] flex-col gap-2 overflow-y-auto px-3 pb-3 pt-1"
+              className="flex max-h-[70svh] flex-col gap-2 overflow-y-auto px-3 pb-3"
             >
               {tasks.map((task, index) => (
                 <Draggable key={task.id} draggableId={task.id} index={index}>
@@ -252,9 +239,7 @@ const BoardColumn = React.forwardRef(function BoardColumn(
               ))}
               {provided.placeholder}
               {tasks.length === 0 ? (
-                <div className="py-8 text-center text-sm text-muted-foreground">
-                  No tasks yet
-                </div>
+                <div className="py-8 text-center text-sm text-muted-foreground">No tasks yet</div>
               ) : null}
             </div>
           )}
