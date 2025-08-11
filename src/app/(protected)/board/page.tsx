@@ -42,7 +42,7 @@ export default function Home() {
   return (
     <div className="min-h-dvh bg-gray-50">
       <Navbar />
-      <main className="container mx-auto px-4 pb-8 pt-4">
+      <main className="container mx-auto px-0 lg:px-4 pb-8 pt-4">
         <KanbanBoard />
       </main>
     </div>
