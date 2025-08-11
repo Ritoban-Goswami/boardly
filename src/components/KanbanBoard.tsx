@@ -127,20 +127,22 @@ export default function KanbanBoard() {
   return (
     <>
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {columns.map((col) => (
-            <BoardColumn
-              key={col.id}
-              id={col.id}
-              title={col.title}
-              accent={col.accent}
-              tasks={tasks.filter((t) => t.status === col.id)}
-              onAdd={() => openAdd(col.id)}
-              onEdit={(task) => openEdit(col.id, task)}
-              onDelete={(task) => requestDelete(col.id, task)}
-              taskViewers={taskViewers}
-            />
-          ))}
+        <div className="w-full overflow-x-auto pb-4 px-4">
+          <div className="inline-flex justify-center items-start w-auto min-w-full gap-4">
+            {columns.map((col) => (
+              <BoardColumn
+                key={col.id}
+                id={col.id}
+                title={col.title}
+                accent={col.accent}
+                tasks={tasks.filter((t) => t.status === col.id)}
+                onAdd={() => openAdd(col.id)}
+                onEdit={(task) => openEdit(col.id, task)}
+                onDelete={(task) => requestDelete(col.id, task)}
+                taskViewers={taskViewers}
+              />
+            ))}
+          </div>
         </div>
       </DragDropContext>
       <TaskDialog
@@ -199,8 +201,14 @@ const BoardColumn = React.forwardRef(function BoardColumn(
   }[accent];
 
   return (
-    <div className={cn('snap-center snap-always w-[88%] shrink-0 md:w-auto')} id={id} ref={ref}>
-      <div className={cn('rounded-xl border', accentClasses.border, accentClasses.bg)}>
+    <div className="w-[280px] xl:w-[350px] flex-shrink-0" id={id} ref={ref}>
+      <div
+        className={cn(
+          'rounded-2xl border h-full flex flex-col',
+          accentClasses.border,
+          accentClasses.bg
+        )}
+      >
         <div className="flex items-center justify-between gap-2 px-3 py-2">
           <h2 className={cn('text-sm font-semibold', accentClasses.title)}>{title}</h2>
           <div className="flex items-center gap-2">
@@ -224,7 +232,7 @@ const BoardColumn = React.forwardRef(function BoardColumn(
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="flex max-h-[70svh] flex-col gap-2 overflow-y-auto px-3 pb-3"
+              className="flex flex-col gap-2 overflow-y-auto px-2 pb-2 flex-1 min-h-[100px]"
             >
               {tasks.map((task, index) => (
                 <Draggable key={task.id} draggableId={task.id} index={index}>

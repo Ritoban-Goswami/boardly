@@ -31,7 +31,7 @@ export default function TaskCard({
   };
   return (
     <Card className={cn('group relative w-full hover:border-stone-300 py-0')}>
-      <CardContent className="p-4">
+      <CardContent className="p-3">
         <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
@@ -50,7 +50,7 @@ export default function TaskCard({
             )}
             {/* User avatars for viewers */}
           </div>
-          <div className="ml-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="hidden xl:flex ml-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
             <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted" onClick={onEdit}>
               <Pencil className="h-4 w-4" />
               <span className="sr-only">Edit</span>
