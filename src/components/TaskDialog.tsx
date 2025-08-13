@@ -113,8 +113,7 @@ export default function TaskDialog({
                     <>
                       <Avatar
                         key={user.id}
-                        className="h-6 w-6 border-2 border-background"
-                        style={{ backgroundColor: stringToColor(user.id) }}
+                        className={`h-6 w-6 border-2 border-background ${stringToColor(user.id)}`}
                         title={user.displayName}
                       >
                         <AvatarFallback className="text-[10px] bg-transparent">

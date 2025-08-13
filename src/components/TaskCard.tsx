@@ -69,7 +69,11 @@ export default function TaskCard({
         <div className="flex justify-between gap-2 items-center mt-5">
           <div className="flex flex-wrap items-center gap-2">
             {task.labels?.map((l) => (
-              <Badge key={l} variant="secondary" className="rounded text-[10px] bg-stone-100">
+              <Badge
+                key={l}
+                variant="secondary"
+                className="rounded text-[10px] bg-stone-100 dark:bg-stone-800"
+              >
                 <Tag className="h-3 w-3" />
                 {l}
               </Badge>
@@ -81,8 +85,7 @@ export default function TaskCard({
                 <>
                   <Avatar
                     key={user.id}
-                    className="h-6 w-6"
-                    style={{ backgroundColor: stringToColor(user.id) }}
+                    className={`h-6 w-6 ${stringToColor(user.id)}`}
                     title={`${user.displayName} (Viewing)`}
                   >
                     <AvatarFallback className="text-[10px]  bg-transparent">
