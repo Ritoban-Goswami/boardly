@@ -25,16 +25,27 @@ export const getInitials = (
   return 'U';
 };
 
-// Function to generate a consistent color from a string
+// Function to generate a consistent color from a string using Tailwind colors
 export const stringToColor = (str: string) => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
 
-  // Generate a pastel color
-  const hue = hash % 360;
-  return `hsl(${hue}, 70%, 80%)`;
+  // Tailwind color palette (500-600 for light mode, 300-400 for dark mode)
+  const colors = [
+    'bg-blue-400 dark:bg-blue-300',
+    'bg-emerald-400 dark:bg-emerald-300',
+    'bg-purple-400 dark:bg-purple-300',
+    'bg-amber-400 dark:bg-amber-300',
+    'bg-rose-400 dark:bg-rose-300',
+    'bg-indigo-400 dark:bg-indigo-300',
+    'bg-teal-400 dark:bg-teal-300',
+    'bg-pink-400 dark:bg-pink-300',
+  ];
+
+  // Pick a consistent color based on the hash
+  return colors[Math.abs(hash) % colors.length];
 };
 
 export function cn(...inputs: ClassValue[]) {

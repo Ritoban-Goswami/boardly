@@ -40,7 +40,7 @@ export default function Home() {
   }, [user, loading, router]);
 
   return (
-    <div className="min-h-dvh bg-gray-50">
+    <div className="min-h-dvh bg-background">
       <Navbar />
       <main className="container mx-auto px-0 lg:px-4 pb-8 pt-4">
         <KanbanBoard />

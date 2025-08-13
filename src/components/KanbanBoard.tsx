@@ -181,22 +181,22 @@ const BoardColumn = React.forwardRef(function BoardColumn(
   const { id, title, accent, tasks, onAdd, onEdit, onDelete, taskViewers } = props;
   const accentClasses = {
     blue: {
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
-      title: 'text-blue-700',
-      button: 'hover:bg-blue-100',
+      bg: 'bg-blue-50 dark:bg-blue-900/30',
+      border: 'border-blue-200 dark:border-blue-800/50',
+      title: 'text-blue-700 dark:text-blue-300',
+      button: 'hover:bg-blue-100 dark:hover:bg-blue-900/50',
     },
     yellow: {
-      bg: 'bg-yellow-50',
-      border: 'border-yellow-200',
-      title: 'text-yellow-700',
-      button: 'hover:bg-yellow-100',
+      bg: 'bg-yellow-50 dark:bg-yellow-900/30',
+      border: 'border-yellow-200 dark:border-yellow-800/50',
+      title: 'text-yellow-700 dark:text-yellow-300',
+      button: 'hover:bg-yellow-100 dark:hover:bg-yellow-900/50',
     },
     green: {
-      bg: 'bg-green-50',
-      border: 'border-green-200',
-      title: 'text-green-700',
-      button: 'hover:bg-green-100',
+      bg: 'bg-green-50 dark:bg-green-900/30',
+      border: 'border-green-200 dark:border-green-800/50',
+      title: 'text-green-700 dark:text-green-300',
+      button: 'hover:bg-green-100 dark:hover:bg-green-900/50',
     },
   }[accent];
 

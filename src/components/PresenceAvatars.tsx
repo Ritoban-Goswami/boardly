@@ -29,10 +29,7 @@ export default function PresenceAvatars() {
       {onlineUsers.map((user) => (
         <Avatar
           key={user.id}
-          className="h-5 w-5 ring-2 ring-white ring-green-400 ring-offset-1"
-          style={{
-            backgroundColor: stringToColor(user.id),
-          }}
+          className={`h-5 w-5 ring-2 ring-white ring-green-400 ring-offset-1 ${stringToColor(user.id)}`}
           title={`${user.displayName} (${user.isOnline ? 'Online' : 'Offline'})`}
         >
           <AvatarFallback className="bg-transparent text-[10px] font-bold uppercase">

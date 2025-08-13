@@ -18,6 +18,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { getInitials, stringToColor } from '@/lib/utils';
+import { ThemeToggle } from './theme-toggle';
 
 export default function Navbar() {
   const router = useRouter();
@@ -30,7 +31,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-14 items-center justify-between gap-3 px-4">
           <Link href="/board" className="flex items-center gap-2">
             <CheckSquare className="h-5 w-5 text-primary" />
@@ -38,16 +39,11 @@ export default function Navbar() {
           </Link>
           <div className="flex items-center gap-2">
             <PresenceAvatars />
-
+            <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted">
-                  <Avatar
-                    className="h-8 w-8"
-                    style={{
-                      backgroundColor: user ? stringToColor(user.uid) : '#e5e7eb',
-                    }}
-                  >
+                  <Avatar className={`h-8 w-8 ${stringToColor(user?.uid || '')}`}>
                     <AvatarFallback className="bg-transparent">{getInitials(user)}</AvatarFallback>
                   </Avatar>
                   <span className="sr-only">Open menu</span>
