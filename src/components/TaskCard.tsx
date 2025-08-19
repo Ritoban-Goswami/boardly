@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn, getInitials, stringToColor } from '@/lib/utils';
 import { Button } from './ui/button';
-import { Pencil, Trash2, Tag } from 'lucide-react';
+import { Pencil, Trash2, Tag, Eye } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import type { Task } from '@/store/useTasks';
 
@@ -80,20 +80,28 @@ export default function TaskCard({
             ))}
           </div>
           {usersViewing.length > 0 && (
-            <div className="flex justify-end -space-x-2">
-              {usersViewing.map((user) => (
-                <>
+            <div className="flex items-center gap-1">
+              <Eye className="h-3 w-3 text-green-400" aria-hidden="true" />
+              <div className="flex justify-end -space-x-2">
+                {usersViewing.slice(0, 2).map((user) => (
                   <Avatar
                     key={user.id}
-                    className={`h-6 w-6 ${stringToColor(user.id)}`}
+                    className={`h-5 w-5 ${stringToColor(user.id)} border border-green-400/50`}
                     title={`${user.displayName} (Viewing)`}
                   >
-                    <AvatarFallback className="text-[10px]  bg-transparent">
+                    <AvatarFallback className="text-[9px] bg-transparent">
                       {getInitials(user)}
                     </AvatarFallback>
                   </Avatar>
-                </>
-              ))}
+                ))}
+                {usersViewing.length > 2 && (
+                  <Avatar className="h-5 w-5 border border-green-400/50 bg-green-200 dark:bg-green-900">
+                    <AvatarFallback className="text-[9px] bg-transparent dark:text-green-200">
+                      +{usersViewing.length - 2}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+              </div>
             </div>
           )}
         </div>
