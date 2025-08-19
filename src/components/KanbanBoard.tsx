@@ -101,6 +101,7 @@ export default function KanbanBoard() {
         status: dialogColumn,
         priority: values.priority || 'medium', // Add default priority
         labels: values.labels || [], // Add default labels
+        assignedTo: values.assignedTo || '',
       });
     } else if (dialogMode === 'edit' && dialogTask) {
       await updateTask(dialogTask.id, values);

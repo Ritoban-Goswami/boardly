@@ -7,6 +7,7 @@ import { Button } from './ui/button';
 import { Pencil, Trash2, Tag, Eye } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import type { Task } from '@/store/useTasks';
+import { useUsersStore } from '@/store/useUsers';
 
 interface UserInfo {
   id: string;
@@ -24,11 +25,15 @@ export default function TaskCard({
   onDelete: () => void;
   usersViewing: UserInfo[];
 }) {
+  const { users } = useUsersStore();
+  const assignedUser = task.assignedTo ? users.find((u) => u.uid === task.assignedTo) : null;
+
   const priorityColors: Record<Task['priority'], string> = {
     low: 'bg-emerald-100 text-emerald-700',
     medium: 'bg-amber-100 text-amber-700',
     high: 'bg-rose-100 text-rose-700',
   };
+
   return (
     <Card className={cn('group relative w-full hover:border-stone-300 py-0')}>
       <CardContent className="p-3">
@@ -66,7 +71,22 @@ export default function TaskCard({
             </Button>
           </div>
         </div>
-        <div className="flex justify-between gap-2 items-center mt-5">
+        {assignedUser && (
+          <div className="flex items-center gap-1.5 mt-4">
+            <Avatar
+              className={`h-6 w-6 border-2 border-primary/30 ${stringToColor(assignedUser.uid)} cursor-pointer ring-1 ring-primary/20`}
+              title={`Assigned to ${assignedUser.displayName}`}
+            >
+              <AvatarFallback className="text-[11px] bg-transparent">
+                {getInitials(assignedUser)}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-[11px] font-semibold text-foreground">
+              {assignedUser.displayName}
+            </span>
+          </div>
+        )}
+        <div className="flex justify-between gap-2 items-center mt-3">
           <div className="flex flex-wrap items-center gap-2">
             {task.labels?.map((l) => (
               <Badge

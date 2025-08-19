@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { getInitials, stringToColor } from '@/lib/utils';
 import { Eye } from 'lucide-react';
+import { useUsersStore } from '@/store/useUsers';
 
 interface UserInfo {
   id: string;
@@ -49,11 +50,17 @@ export default function TaskDialog({
   column?: ColumnId;
   usersViewing?: UserInfo[];
 }) {
+  const { users, fetchUsers } = useUsersStore();
   const [title, setTitle] = useState(initialTask?.title ?? '');
   const [description, setDescription] = useState(initialTask?.description ?? '');
   const [labels, setLabels] = useState<string[]>(initialTask?.labels ?? []);
   const [labelInput, setLabelInput] = useState('');
   const [priority, setPriority] = useState<Task['priority']>(initialTask?.priority ?? 'medium');
+  const [assignedTo, setAssignedTo] = useState(initialTask?.assignedTo ?? '');
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   useEffect(() => {
     if (open) {
@@ -61,6 +68,7 @@ export default function TaskDialog({
       setDescription(initialTask?.description ?? '');
       setLabels(initialTask?.labels ?? []);
       setPriority(initialTask?.priority ?? 'medium');
+      setAssignedTo(initialTask?.assignedTo ?? '');
     }
   }, [open, initialTask]);
 
@@ -72,6 +80,7 @@ export default function TaskDialog({
       description: description.trim() || undefined,
       labels,
       priority,
+      assignedTo,
     });
   }
 
@@ -174,6 +183,31 @@ export default function TaskDialog({
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label>Assigned to</Label>
+              <Select value={assignedTo} onValueChange={(value) => setAssignedTo(value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select assignee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((user) => (
+                    <SelectItem key={user.uid} value={user.uid}>
+                      <div className="flex items-center gap-2">
+                        <Avatar
+                          className={`h-5 w-5 border ${stringToColor(user.uid)}`}
+                          title={`Assigned to ${user.displayName || user.email}`}
+                        >
+                          <AvatarFallback className="text-[9px] bg-transparent">
+                            {getInitials(user)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs">{user.displayName || user.email}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="space-y-2">
             <Label>Labels</Label>
@@ -195,7 +229,11 @@ export default function TaskDialog({
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
               {labels.map((l) => (
-                <Badge key={l} variant="secondary" className="bg-gray-100">
+                <Badge
+                  key={l}
+                  variant="secondary"
+                  className="rounded text-[10px] bg-stone-100 dark:bg-stone-800"
+                >
                   <span className="mr-1">{l}</span>
                   <button
                     type="button"
