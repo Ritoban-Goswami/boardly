@@ -11,7 +11,7 @@ export interface Task {
   description?: string;
   priority: 'low' | 'medium' | 'high';
   labels?: string[];
-  // Add other task properties as needed
+  assignedTo?: string;
 }
 
 interface TasksState {
