@@ -98,7 +98,7 @@ export default function TaskDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="h-[calc(100vh-10rem)] overflow-y-auto sm:h-fit sm:overflow-y-hidden"
+        className="h-[calc(100vh-10rem)] overflow-y-auto sm:h-fit sm:overflow-y-hidden outline-none"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
