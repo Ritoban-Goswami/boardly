@@ -97,55 +97,56 @@ export default function TaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="h-[calc(100vh-10rem)] overflow-y-auto sm:h-fit sm:overflow-y-hidden"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>{mode === 'add' ? 'Add Task' : 'Edit Task'}</DialogTitle>
           </div>
+          <DialogDescription className="text-left mt-3">
+            {mode === 'add' ? 'Create a new task' : 'Update task details'} in{' '}
+            <span className="font-medium">
+              {column === 'todo' ? 'To Do' : column === 'in-progress' ? 'In Progress' : 'Done'}
+            </span>
+          </DialogDescription>
         </DialogHeader>
-        <DialogDescription>
-          {mode === 'add' ? 'Create a new task' : 'Update task details'} in{' '}
-          <span className="font-medium">
-            {column === 'todo' ? 'To Do' : column === 'in-progress' ? 'In Progress' : 'Done'}
-          </span>
-          {usersViewing.length > 0 && (
-            <div
-              className="mt-3 flex items-center gap-2 rounded-md border bg-muted/50 px-2.5 py-1.5 w-fit"
-              aria-label="users-viewing"
-              role="group"
-            >
-              <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              <span className="text-xs text-muted-foreground">Currently viewing</span>
-              <div className="flex items-center gap-2">
-                <span className="flex -space-x-2">
-                  {usersViewing.slice(0, 3).map((user) => (
-                    <>
-                      <Avatar
-                        key={user.id}
-                        className={`h-6 w-6 border-2 border-background ${stringToColor(user.id)}`}
-                        title={user.displayName}
-                      >
-                        <AvatarFallback className="text-[10px] bg-transparent">
-                          {getInitials(user)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </>
-                  ))}
-                  {usersViewing.length > 3 && (
-                    <Avatar
-                      className="h-6 w-6 border-2 border-background bg-muted text-muted-foreground "
-                      title={`+${usersViewing.length - 3}`}
-                    >
-                      <AvatarFallback className="text-[10px] bg-transparent">
-                        +{usersViewing.length - 3}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                </span>
-              </div>
+        {usersViewing.length > 0 && (
+          <div
+            className="flex items-center gap-2 rounded-md border bg-muted/50 px-2.5 py-1.5 w-fit"
+            aria-label="users-viewing"
+            role="group"
+          >
+            <Eye className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Currently viewing</span>
+            <div className="flex items-center gap-2">
+              <span className="flex -space-x-2">
+                {usersViewing.slice(0, 3).map((user) => (
+                  <Avatar
+                    key={user.id}
+                    className={`h-6 w-6 border-2 border-background ${stringToColor(user.id)}`}
+                    title={user.displayName}
+                  >
+                    <AvatarFallback className="text-[10px] bg-transparent">
+                      {getInitials(user)}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+                {usersViewing.length > 3 && (
+                  <Avatar
+                    className="h-6 w-6 border-2 border-background bg-muted text-muted-foreground "
+                    title={`+${usersViewing.length - 3}`}
+                  >
+                    <AvatarFallback className="text-[10px] bg-transparent">
+                      +{usersViewing.length - 3}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+              </span>
             </div>
-          )}
-        </DialogDescription>
+          </div>
+        )}
         <form onSubmit={handleSave} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="task-title">Title</Label>
@@ -155,7 +156,6 @@ export default function TaskDialog({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              autoFocus
             />
           </div>
           <div className="space-y-2">
