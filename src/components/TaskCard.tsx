@@ -35,7 +35,10 @@ export default function TaskCard({
   };
 
   return (
-    <Card className="group relative w-full hover:border-stone-300 py-0" onClick={onEdit}>
+    <Card
+      className="group relative w-full hover:border-stone-300 py-0 cursor-grab active:cursor-grabbing"
+      onClick={onEdit}
+    >
       <CardContent className="p-3">
         <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1">
