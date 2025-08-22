@@ -23,6 +23,14 @@ interface TaskViewer {
   displayName: string;
 }
 
+type TaskUpdate = {
+  id: string;
+  updates: {
+    status?: ColumnId;
+    order: number;
+  };
+};
+
 export default function KanbanBoard() {
   const { tasks, updateTask, deleteTask, addTask } = useTasksStore();
   const [dialogColumn, setDialogColumn] = useState<ColumnId>('todo');
@@ -53,14 +61,85 @@ export default function KanbanBoard() {
     return () => unsub();
   }, []);
 
-  const onDragEnd = (result: DropResult) => {
-    const { destination, source, draggableId } = result;
-    if (!destination) return;
-    if (destination.droppableId !== source.droppableId) {
-      // Ensure the status is one of the allowed values
-      const status = destination.droppableId as Task['status'];
-      updateTask(draggableId, { status });
+  const getTasksForColumn = (status: ColumnId, excludeTaskId?: string): Task[] => {
+    return tasks
+      .filter((task) => task.status === status && task.id !== excludeTaskId)
+      .sort((a, b) => a.order - b.order);
+  };
+
+  const createTaskUpdate = (
+    task: Task,
+    newOrder: number,
+    options?: { updateStatus?: boolean; newStatus?: ColumnId }
+  ): TaskUpdate => ({
+    id: task.id,
+    updates: {
+      ...(options?.updateStatus && { status: options.newStatus }),
+      order: newOrder,
+    },
+  });
+
+  const updateTaskOrders = async (updates: TaskUpdate[]): Promise<void> => {
+    if (updates.length === 0) return;
+
+    try {
+      await Promise.all(updates.map(({ id, updates }) => updateTask(id, updates)));
+    } catch (error) {
+      console.error('Error updating task orders:', error);
+      throw error;
     }
+  };
+
+  const onDragEnd = async (result: DropResult): Promise<void> => {
+    const { destination, source, draggableId } = result;
+
+    // Ignore if dropped outside a valid destination or in the same position
+    if (
+      !destination ||
+      (destination.droppableId === source.droppableId && destination.index === source.index)
+    ) {
+      return;
+    }
+
+    const movedTask = tasks.find((task) => task.id === draggableId);
+    if (!movedTask) return;
+
+    const sourceColumn = source.droppableId as ColumnId;
+    const destinationColumn = destination.droppableId as ColumnId;
+    const isSameColumn = sourceColumn === destinationColumn;
+
+    // Get tasks for the destination column and insert the moved task
+    const destinationTasks = getTasksForColumn(destinationColumn, draggableId);
+    destinationTasks.splice(destination.index, 0, {
+      ...movedTask,
+      status: destinationColumn,
+    });
+
+    // Prepare updates for all affected tasks in the destination column
+    const updates = destinationTasks
+      // Only include tasks that changed position or the moved task
+      .filter((task, index) => task.id === movedTask.id || task.order !== index)
+      .map((task) =>
+        createTaskUpdate(task, destinationTasks.indexOf(task), {
+          updateStatus: task.id === movedTask.id,
+          newStatus: destinationColumn,
+        })
+      );
+
+    // If moving between columns, update the source column as well
+    if (!isSameColumn) {
+      const sourceTasks = getTasksForColumn(sourceColumn, draggableId);
+
+      // Update orders for remaining tasks in the source column
+      sourceTasks.forEach((task, index) => {
+        if (task.order !== index) {
+          updates.push(createTaskUpdate(task, index));
+        }
+      });
+    }
+
+    // Apply all updates
+    await updateTaskOrders(updates);
   };
 
   function openAdd(column: ColumnId) {
@@ -91,21 +170,27 @@ export default function KanbanBoard() {
 
   async function handleSave(values: Partial<Task>) {
     if (dialogMode === 'add') {
-      if (!values.title) {
-        console.error('Title is required');
-        return;
-      }
+      // Get all tasks in the target column and sort them by order
+      const columnTasks = tasks
+        .filter((t) => t.status === dialogColumn)
+        .sort((a, b) => a.order - b.order);
+
+      // Calculate new order (start with 0 if no tasks, or add 1 to the last task's order)
+      const newOrder = columnTasks.length > 0 ? columnTasks[columnTasks.length - 1].order + 1 : 0;
+
       await addTask({
-        title: values.title,
-        description: values.description || '',
+        title: values.title ?? '',
+        description: values.description ?? '',
         status: dialogColumn,
-        priority: values.priority || 'medium', // Add default priority
-        labels: values.labels || [], // Add default labels
-        assignedTo: values.assignedTo || '',
+        priority: values.priority ?? 'medium',
+        labels: values.labels ?? [],
+        assignedTo: values.assignedTo ?? '',
+        order: newOrder,
       });
     } else if (dialogMode === 'edit' && dialogTask) {
       await updateTask(dialogTask.id, values);
     }
+
     setDialogOpen(false);
   }
 
@@ -136,7 +221,7 @@ export default function KanbanBoard() {
                 id={col.id}
                 title={col.title}
                 accent={col.accent}
-                tasks={tasks.filter((t) => t.status === col.id)}
+                tasks={tasks.filter((t) => t.status === col.id).sort((a, b) => a.order - b.order)}
                 onAdd={() => openAdd(col.id)}
                 onEdit={(task) => openEdit(col.id, task)}
                 onDelete={(task) => requestDelete(col.id, task)}

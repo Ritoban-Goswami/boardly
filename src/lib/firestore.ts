@@ -49,6 +49,7 @@ export const listenToTasks = (callback: (tasks: Task[]) => void) => {
       title: '',
       status: 'todo' as ColumnId,
       priority: 'medium' as const,
+      order: 0,
       ...doc.data(),
     }));
     callback(tasks);
