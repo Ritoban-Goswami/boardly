@@ -233,7 +233,7 @@ const BoardColumn = React.forwardRef(function BoardColumn(
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="flex flex-col gap-2 overflow-y-auto px-2 pb-2 flex-1 min-h-[100px]"
+              className="flex flex-col gap-2 px-2 pb-2 flex-1 min-h-[100px]"
             >
               {tasks.map((task, index) => (
                 <Draggable key={task.id} draggableId={task.id} index={index}>
