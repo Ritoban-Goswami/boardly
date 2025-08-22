@@ -12,6 +12,7 @@ export interface Task {
   priority: 'low' | 'medium' | 'high';
   labels?: string[];
   assignedTo?: string;
+  order: number; // Used for sorting tasks within a column
 }
 
 interface TasksState {
