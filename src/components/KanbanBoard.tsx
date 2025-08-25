@@ -11,6 +11,7 @@ import { useTasksStore } from '@/store/useTasks';
 import { useTypingStore } from '@/store/useTyping';
 import { auth } from '@/lib/firebase';
 import { usePresenceStore } from '@/store/usePresence';
+import { useUsersStore } from '@/store/useUsers';
 
 const columns = [
   { id: 'todo' as const, title: 'To Do', accent: 'blue' as const },
@@ -44,8 +45,12 @@ export default function KanbanBoard() {
   }, [dialogOpen, dialogTask?.id, setTyping]);
 
   useEffect(() => {
-    const unsub = useTasksStore.getState().initListener();
-    return () => unsub();
+    const unsubTasks = useTasksStore.getState().initListener();
+    const unsubUsers = useUsersStore.getState().initListener();
+    return () => {
+      unsubTasks();
+      unsubUsers();
+    };
   }, []);
 
   const getTasksForColumn = (status: ColumnId, excludeTaskId?: string): Task[] => {

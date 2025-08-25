@@ -6,6 +6,7 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  setDoc,
   onSnapshot,
   query,
   orderBy,
@@ -53,4 +54,37 @@ export const listenToTasks = (callback: (tasks: Task[]) => void) => {
     }));
     callback(tasks);
   });
+};
+
+// Get Users (Real-time listener)
+export const listenToUsers = (callback: (users: User[]) => void) => {
+  const usersCol = collection(db, 'users');
+  const q = query(usersCol, orderBy('createdAt', 'asc'));
+  return onSnapshot(q, (snapshot) => {
+    const users = snapshot.docs.map((doc) => ({
+      uid: doc.id,
+      email: '',
+      displayName: '',
+      ...doc.data(),
+    }));
+    callback(users);
+  });
+};
+
+// Create or Update User
+export const createUserInFirestore = async (user: User) => {
+  if (!user.uid || !user.email) return;
+
+  const userRef = doc(db, 'users', user.uid);
+
+  await setDoc(
+    userRef,
+    {
+      email: user.email,
+      displayName: user.displayName || '',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
 };
