@@ -21,16 +21,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { Task, ColumnId } from '@/store/useTasks';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { getInitials, stringToColor } from '@/lib/utils';
 import { Eye } from 'lucide-react';
 import { useUsersStore } from '@/store/useUsers';
 
-interface UserInfo {
-  id: string;
-  displayName: string;
+interface TaskDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  mode: 'add' | 'edit';
+  initialTask: Task | null;
+  onSubmit: (values: Partial<Task>) => void;
+  column: ColumnId;
+  usersViewing: UserInfo[];
 }
 
 export default function TaskDialog({
@@ -41,15 +45,7 @@ export default function TaskDialog({
   onSubmit = () => {},
   column = 'todo',
   usersViewing = [],
-}: {
-  open?: boolean;
-  onOpenChange?: (o: boolean) => void;
-  mode?: 'add' | 'edit';
-  initialTask?: Task | null;
-  onSubmit?: (values: Partial<Task>) => void;
-  column?: ColumnId;
-  usersViewing?: UserInfo[];
-}) {
+}: TaskDialogProps) {
   const { users, fetchUsers } = useUsersStore();
   const [title, setTitle] = useState(initialTask?.title ?? '');
   const [description, setDescription] = useState(initialTask?.description ?? '');
