@@ -46,17 +46,13 @@ export default function TaskDialog({
   column = 'todo',
   usersViewing = [],
 }: TaskDialogProps) {
-  const { users, fetchUsers } = useUsersStore();
+  const { users } = useUsersStore();
   const [title, setTitle] = useState(initialTask?.title ?? '');
   const [description, setDescription] = useState(initialTask?.description ?? '');
   const [labels, setLabels] = useState<string[]>(initialTask?.labels ?? []);
   const [labelInput, setLabelInput] = useState('');
   const [priority, setPriority] = useState<Task['priority']>(initialTask?.priority ?? 'medium');
   const [assignedTo, setAssignedTo] = useState(initialTask?.assignedTo ?? '');
-
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
 
   useEffect(() => {
     if (open) {

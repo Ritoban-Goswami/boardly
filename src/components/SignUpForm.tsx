@@ -5,6 +5,7 @@ import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import { createUserInFirestore } from '@/lib/firestore';
 import { CheckSquare } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -39,6 +40,8 @@ export function SignupForm({ className, ...props }: React.ComponentProps<'div'>)
         await updateProfile(userCredential.user, {
           displayName: displayName,
         });
+        // Create user in Firestore
+        await createUserInFirestore(userCredential.user);
       }
       router.push('/');
     } catch (err: unknown) {

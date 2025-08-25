@@ -7,8 +7,7 @@ interface User {
 interface UsersState {
   users: User[];
   loading: boolean;
-  error: string | null;
-  fetchUsers: () => Promise<void>;
+  initListener: () => () => void;
 }
 
 // Structure: { [taskId: string]: { [userId: string]: boolean } }
