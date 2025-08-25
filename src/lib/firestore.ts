@@ -1,6 +1,5 @@
 // lib/firestore.ts
 import { db } from './firebase';
-import { Task, ColumnId } from '@/store/useTasks';
 import {
   collection,
   addDoc,

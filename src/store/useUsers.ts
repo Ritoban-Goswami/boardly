@@ -1,19 +1,6 @@
 // store/useUsers.ts
 import { create } from 'zustand';
 
-interface User {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-}
-
-interface UsersState {
-  users: User[];
-  loading: boolean;
-  error: string | null;
-  fetchUsers: () => Promise<void>;
-}
-
 export const useUsersStore = create<UsersState>((set) => ({
   users: [],
   loading: false,
