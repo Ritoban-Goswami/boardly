@@ -53,3 +53,8 @@ interface PresenceState {
   initListener: () => () => void;
   setUserOnline: (userId: string, displayName: string) => void;
 }
+
+interface UserInfo {
+  id: string;
+  displayName: string;
+}

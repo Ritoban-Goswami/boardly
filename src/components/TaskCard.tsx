@@ -6,25 +6,16 @@ import { cn, getInitials, stringToColor } from '@/lib/utils';
 import { Button } from './ui/button';
 import { Pencil, Trash2, Tag, Eye } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import type { Task } from '@/store/useTasks';
 import { useUsersStore } from '@/store/useUsers';
 
-interface UserInfo {
-  id: string;
-  displayName: string;
-}
-
-export default function TaskCard({
-  task,
-  onEdit,
-  onDelete,
-  usersViewing,
-}: {
+interface TaskCardProps {
   task: Task;
   onEdit: () => void;
   onDelete: () => void;
   usersViewing: UserInfo[];
-}) {
+}
+
+export default function TaskCard({ task, onEdit, onDelete, usersViewing }: TaskCardProps) {
   const { users } = useUsersStore();
   const assignedUser = task.assignedTo ? users.find((u) => u.uid === task.assignedTo) : null;
 
