@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -8,19 +8,21 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
+
+interface DeleteDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  onConfirm: () => void;
+}
 
 export default function DeleteDialog({
   open = false,
   onOpenChange = () => {},
-  title = "",
+  title = '',
   onConfirm = () => {},
-}: {
-  open?: boolean;
-  onOpenChange?: (o: boolean) => void;
-  title?: string;
-  onConfirm?: () => void;
-}) {
+}: DeleteDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -28,8 +30,7 @@ export default function DeleteDialog({
           <DialogTitle>Delete task?</DialogTitle>
           <DialogDescription>
             {"This action can't be undone. The task "}
-            <span className="font-medium">“{title}”</span> will be permanently
-            removed.
+            <span className="font-medium">“{title}”</span> will be permanently removed.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

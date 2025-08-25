@@ -7,7 +7,7 @@ import TaskDialog from './TaskDialog';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { Plus } from 'lucide-react';
-import { useTasksStore, Task, ColumnId } from '@/store/useTasks';
+import { useTasksStore } from '@/store/useTasks';
 import { useTypingStore } from '@/store/useTyping';
 import { auth } from '@/lib/firebase';
 import { usePresenceStore } from '@/store/usePresence';
@@ -17,19 +17,6 @@ const columns = [
   { id: 'in-progress' as const, title: 'In Progress', accent: 'yellow' as const },
   { id: 'done' as const, title: 'Done', accent: 'green' as const },
 ];
-
-interface TaskViewer {
-  id: string;
-  displayName: string;
-}
-
-type TaskUpdate = {
-  id: string;
-  updates: {
-    status?: ColumnId;
-    order: number;
-  };
-};
 
 export default function KanbanBoard() {
   const { tasks, updateTask, deleteTask, addTask } = useTasksStore();
@@ -235,7 +222,7 @@ export default function KanbanBoard() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         mode={dialogMode}
-        initialTask={dialogTask}
+        initialTask={dialogTask ?? null}
         onSubmit={handleSave}
         column={dialogColumn}
         usersViewing={dialogTask?.id ? taskViewers[dialogTask.id] || [] : []}

@@ -58,3 +58,16 @@ interface UserInfo {
   id: string;
   displayName: string;
 }
+
+interface TaskViewer {
+  id: string;
+  displayName: string;
+}
+
+type TaskUpdate = {
+  id: string;
+  updates: {
+    status?: ColumnId;
+    order: number;
+  };
+};
