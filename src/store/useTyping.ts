@@ -2,15 +2,6 @@
 import { create } from 'zustand';
 import { listenToTyping, setTypingStatus } from '@/lib/realtime';
 
-// Structure: { [taskId: string]: { [userId: string]: boolean } }
-type TypingStateType = Record<string, Record<string, boolean>>;
-
-interface TypingState {
-  typing: TypingStateType;
-  initListener: () => () => void;
-  setTyping: (taskId: string, isTyping: boolean) => void;
-}
-
 export const useTypingStore = create<TypingState>((set) => ({
   typing: {},
   initListener: () => {

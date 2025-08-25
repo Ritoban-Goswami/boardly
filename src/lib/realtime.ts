@@ -2,12 +2,6 @@
 import { ref, onValue, set, onDisconnect } from 'firebase/database';
 import { auth, rtdb } from './firebase';
 
-interface PresenceData {
-  displayName: string;
-  online: boolean;
-  lastSeen: number;
-}
-
 // Presence
 export const setUserPresence = (userId: string, displayName: string) => {
   const userRef = ref(rtdb, `presence/${userId}`);
