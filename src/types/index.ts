@@ -51,6 +51,8 @@ interface PresenceState {
   presence: Record<string, PresenceData>;
   initListener: () => () => void;
   setUserOnline: (userId: string, displayName: string) => void;
+  setUserOffline: (userId: string) => void;
+  removeUserPresence: (userId: string) => void;
 }
 
 interface UserInfo {

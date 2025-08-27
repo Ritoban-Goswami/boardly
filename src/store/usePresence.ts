@@ -1,6 +1,11 @@
 // store/usePresence.ts
 import { create } from 'zustand';
-import { listenToPresence, setUserPresence } from '@/lib/realtime';
+import {
+  listenToPresence,
+  setUserPresence,
+  setUserOffline,
+  removeUserPresence,
+} from '@/lib/realtime';
 
 export const usePresenceStore = create<PresenceState>((set) => ({
   presence: {},
@@ -12,5 +17,11 @@ export const usePresenceStore = create<PresenceState>((set) => ({
   },
   setUserOnline: (userId: string, displayName: string) => {
     setUserPresence(userId, displayName);
+  },
+  setUserOffline: (userId: string) => {
+    setUserOffline(userId);
+  },
+  removeUserPresence: (userId: string) => {
+    removeUserPresence(userId);
   },
 }));
