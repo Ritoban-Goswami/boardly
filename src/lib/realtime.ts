@@ -1,5 +1,5 @@
 // lib/realtime.ts
-import { ref, onValue, set, onDisconnect } from 'firebase/database';
+import { ref, onValue, set, remove } from 'firebase/database';
 import { auth, rtdb } from './firebase';
 
 // Presence
@@ -13,13 +13,26 @@ export const setUserPresence = (userId: string, displayName: string) => {
 
   // Set as online
   set(userRef, presenceData);
+};
 
-  // Auto set offline on disconnect
-  onDisconnect(userRef).set({
-    displayName,
+// Clean up presence when user explicitly goes offline
+export const setUserOffline = (userId: string) => {
+  const userRef = ref(rtdb, `presence/${userId}`);
+
+  // Set offline status
+  set(userRef, {
+    displayName: auth.currentUser?.displayName || auth.currentUser?.email || 'Anonymous',
     online: false,
     lastSeen: Date.now(),
   });
+};
+
+// Remove user presence completely (e.g., on logout)
+export const removeUserPresence = (userId: string) => {
+  const userRef = ref(rtdb, `presence/${userId}`);
+
+  // Remove the presence entry
+  remove(userRef);
 };
 
 export const listenToPresence = (callback: (presence: Record<string, PresenceData>) => void) => {

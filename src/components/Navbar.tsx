@@ -19,15 +19,21 @@ import { auth } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { getInitials, stringToColor } from '@/lib/utils';
 import { ThemeToggle } from './theme-toggle';
+import { usePresenceStore } from '@/store/usePresence';
 
 export default function Navbar() {
   const router = useRouter();
   const [user] = useAuthState(auth);
+  const { removeUserPresence } = usePresenceStore();
 
   const handleLogout = useCallback(async () => {
+    if (user) {
+      // Clean up presence before signing out
+      removeUserPresence(user.uid);
+    }
     await signOut(auth);
     router.push('auth/login');
-  }, [router]);
+  }, [router, user, removeUserPresence]);
 
   return (
     <>

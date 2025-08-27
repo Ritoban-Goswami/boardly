@@ -11,7 +11,7 @@ import { useTypingStore } from '@/store/useTyping';
 export default function Home() {
   const router = useRouter();
   const [user, loading] = useAuthState(auth);
-  const { initListener: initPresence, setUserOnline } = usePresenceStore();
+  const { initListener: initPresence, setUserOnline, setUserOffline } = usePresenceStore();
   const { initListener: initTyping } = useTypingStore();
 
   useEffect(() => {
@@ -27,11 +27,61 @@ export default function Home() {
     const unsubPresence = initPresence();
     const unsubTyping = initTyping();
 
+    // Handle page visibility change (tab switching, minimizing)
+    const handleVisibilityChange = () => {
+      if (document.hidden && auth.currentUser) {
+        setUserOffline(auth.currentUser.uid);
+      } else if (!document.hidden && auth.currentUser) {
+        setUserOnline(
+          auth.currentUser.uid,
+          auth.currentUser.displayName || auth.currentUser.email || 'Anonymous'
+        );
+      }
+    };
+
+    // Handle beforeunload (page refresh, tab close)
+    const handleBeforeUnload = () => {
+      if (auth.currentUser) {
+        setUserOffline(auth.currentUser.uid);
+      }
+    };
+
+    // Handle network connectivity changes
+    const handleOnline = () => {
+      if (auth.currentUser) {
+        setUserOnline(
+          auth.currentUser.uid,
+          auth.currentUser.displayName || auth.currentUser.email || 'Anonymous'
+        );
+      }
+    };
+
+    const handleOffline = () => {
+      if (auth.currentUser) {
+        setUserOffline(auth.currentUser.uid);
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
+      // Clean up presence when component unmounts
+      if (auth.currentUser) {
+        setUserOffline(auth.currentUser.uid);
+      }
+
       unsubPresence();
       unsubTyping();
+
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [initPresence, initTyping, setUserOnline]);
+  }, [initPresence, initTyping, setUserOnline, setUserOffline]); // cleanup was removed from dependencies
 
   useEffect(() => {
     if (!loading && !user) {
