@@ -6,13 +6,11 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import KanbanBoard from '@/components/KanbanBoard';
 import Navbar from '@/components/Navbar';
 import { usePresenceStore } from '@/store/usePresence';
-import { useTypingStore } from '@/store/useTyping';
 
 export default function Home() {
   const router = useRouter();
   const [user, loading] = useAuthState(auth);
   const { initListener: initPresence, setUserOnline, setUserOffline } = usePresenceStore();
-  const { initListener: initTyping } = useTypingStore();
 
   // Presence management functions
   const setUserPresence = useCallback(
@@ -53,7 +51,6 @@ export default function Home() {
 
     // Set up listeners
     const unsubPresence = initPresence();
-    const unsubTyping = initTyping();
 
     // Add event listeners
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -65,7 +62,6 @@ export default function Home() {
     return () => {
       setUserPresence(false);
       unsubPresence();
-      unsubTyping();
 
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
@@ -74,7 +70,6 @@ export default function Home() {
     };
   }, [
     initPresence,
-    initTyping,
     setUserPresence,
     handleVisibilityChange,
     handleBeforeUnload,
