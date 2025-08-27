@@ -5,6 +5,7 @@ import {
   setUserPresence,
   setUserOffline,
   removeUserPresence,
+  setTypingStatus,
 } from '@/lib/realtime';
 
 export const usePresenceStore = create<PresenceState>((set) => ({
@@ -23,5 +24,8 @@ export const usePresenceStore = create<PresenceState>((set) => ({
   },
   removeUserPresence: (userId: string) => {
     removeUserPresence(userId);
+  },
+  setTyping: (taskId: string, isTyping: boolean) => {
+    setTypingStatus(taskId, isTyping);
   },
 }));

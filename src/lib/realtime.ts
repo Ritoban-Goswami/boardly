@@ -1,5 +1,5 @@
 // lib/realtime.ts
-import { ref, onValue, set, remove } from 'firebase/database';
+import { ref, onValue, remove, update } from 'firebase/database';
 import { auth, rtdb } from './firebase';
 
 // Presence
@@ -12,7 +12,7 @@ export const setUserPresence = (userId: string, displayName: string) => {
   };
 
   // Set as online
-  set(userRef, presenceData);
+  update(userRef, presenceData);
 };
 
 // Clean up presence when user explicitly goes offline
@@ -20,7 +20,7 @@ export const setUserOffline = (userId: string) => {
   const userRef = ref(rtdb, `presence/${userId}`);
 
   // Set offline status
-  set(userRef, {
+  update(userRef, {
     displayName: auth.currentUser?.displayName || auth.currentUser?.email || 'Anonymous',
     online: false,
     lastSeen: Date.now(),
@@ -45,16 +45,11 @@ export const listenToPresence = (callback: (presence: Record<string, PresenceDat
 // Typing
 export const setTypingStatus = (taskId: string, isTyping: boolean) => {
   if (!auth.currentUser) return;
-  const userId = auth.currentUser.uid;
-  const typingRef = ref(rtdb, `typing/${taskId}/${userId}`);
-  set(typingRef, isTyping);
-};
 
-export const listenToTyping = (
-  callback: (typingUsers: Record<string, Record<string, boolean>>) => void
-) => {
-  const typingRef = ref(rtdb, `typing`);
-  return onValue(typingRef, (snapshot) => {
-    callback(snapshot.val() || {});
-  });
+  const userId = auth.currentUser.uid;
+  const userRef = ref(rtdb, `presence/${userId}`);
+
+  isTyping
+    ? update(userRef, { currentTaskViewing: taskId })
+    : remove(ref(rtdb, `presence/${userId}/currentTaskViewing`));
 };

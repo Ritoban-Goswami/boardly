@@ -45,6 +45,7 @@ interface PresenceData {
   displayName: string;
   online: boolean;
   lastSeen: number;
+  currentTaskViewing?: string;
 }
 
 interface PresenceState {
@@ -53,6 +54,7 @@ interface PresenceState {
   setUserOnline: (userId: string, displayName: string) => void;
   setUserOffline: (userId: string) => void;
   removeUserPresence: (userId: string) => void;
+  setTyping: (taskId: string, isTyping: boolean) => void;
 }
 
 interface UserInfo {

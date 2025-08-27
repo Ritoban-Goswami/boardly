@@ -8,7 +8,6 @@ import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { Plus } from 'lucide-react';
 import { useTasksStore } from '@/store/useTasks';
-import { useTypingStore } from '@/store/useTyping';
 import { auth } from '@/lib/firebase';
 import { usePresenceStore } from '@/store/usePresence';
 import { useUsersStore } from '@/store/useUsers';
@@ -26,8 +25,7 @@ export default function KanbanBoard() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { typing: allUsersViewing, setTyping } = useTypingStore();
-  const { presence } = usePresenceStore();
+  const { presence, setTyping } = usePresenceStore();
 
   useEffect(() => {
     // Only set typing status if we have a valid task ID
@@ -190,17 +188,21 @@ export default function KanbanBoard() {
   const taskViewers = useMemo(() => {
     const result: Record<string, Array<{ id: string; displayName: string }>> = {};
 
-    Object.entries(allUsersViewing).forEach(([taskId, viewers]) => {
-      result[taskId] = Object.entries(viewers || {})
-        .filter(([userId, isViewing]) => isViewing && userId !== auth.currentUser?.uid)
-        .map(([userId]) => ({
+    // Create mapping from presence data using currentTaskViewing field
+    Object.entries(presence)
+      .filter(
+        ([userId, userData]) => userData.currentTaskViewing && userId !== auth.currentUser?.uid
+      )
+      .forEach(([userId, userData]) => {
+        const taskId = userData.currentTaskViewing!;
+        (result[taskId] ??= []).push({
           id: userId,
-          displayName: presence[userId]?.displayName || 'User',
-        }));
-    });
+          displayName: userData.displayName || 'User',
+        });
+      });
 
     return result;
-  }, [allUsersViewing, presence]);
+  }, [presence]);
 
   return (
     <>
