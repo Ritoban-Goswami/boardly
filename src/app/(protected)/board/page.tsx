@@ -1,7 +1,7 @@
 'use client';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import KanbanBoard from '@/components/KanbanBoard';
 import Navbar from '@/components/Navbar';
@@ -14,74 +14,72 @@ export default function Home() {
   const { initListener: initPresence, setUserOnline, setUserOffline } = usePresenceStore();
   const { initListener: initTyping } = useTypingStore();
 
-  useEffect(() => {
-    // Set presence
-    if (auth.currentUser) {
-      setUserOnline(
-        auth.currentUser.uid,
-        auth.currentUser.displayName || auth.currentUser.email || 'Anonymous'
-      );
-    }
+  // Presence management functions
+  const setUserPresence = useCallback(
+    (online: boolean) => {
+      if (!auth.currentUser) return;
 
-    // Listen for presence
+      const userId = auth.currentUser.uid;
+      const displayName = auth.currentUser.displayName || auth.currentUser.email || 'Anonymous';
+
+      if (online) {
+        setUserOnline(userId, displayName);
+      } else {
+        setUserOffline(userId);
+      }
+    },
+    [setUserOnline, setUserOffline]
+  );
+
+  // Event handlers
+  const handleVisibilityChange = useCallback(() => {
+    setUserPresence(!document.hidden);
+  }, [setUserPresence]);
+
+  const handleBeforeUnload = useCallback(() => {
+    setUserPresence(false);
+  }, [setUserPresence]);
+
+  const handleNetworkChange = useCallback(
+    (isOnline: boolean) => {
+      setUserPresence(isOnline);
+    },
+    [setUserPresence]
+  );
+
+  useEffect(() => {
+    // Initialize presence
+    setUserPresence(true);
+
+    // Set up listeners
     const unsubPresence = initPresence();
     const unsubTyping = initTyping();
 
-    // Handle page visibility change (tab switching, minimizing)
-    const handleVisibilityChange = () => {
-      if (document.hidden && auth.currentUser) {
-        setUserOffline(auth.currentUser.uid);
-      } else if (!document.hidden && auth.currentUser) {
-        setUserOnline(
-          auth.currentUser.uid,
-          auth.currentUser.displayName || auth.currentUser.email || 'Anonymous'
-        );
-      }
-    };
-
-    // Handle beforeunload (page refresh, tab close)
-    const handleBeforeUnload = () => {
-      if (auth.currentUser) {
-        setUserOffline(auth.currentUser.uid);
-      }
-    };
-
-    // Handle network connectivity changes
-    const handleOnline = () => {
-      if (auth.currentUser) {
-        setUserOnline(
-          auth.currentUser.uid,
-          auth.currentUser.displayName || auth.currentUser.email || 'Anonymous'
-        );
-      }
-    };
-
-    const handleOffline = () => {
-      if (auth.currentUser) {
-        setUserOffline(auth.currentUser.uid);
-      }
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    // Add event listeners
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('online', () => handleNetworkChange(true));
+    window.addEventListener('offline', () => handleNetworkChange(false));
 
+    // Cleanup function
     return () => {
-      // Clean up presence when component unmounts
-      if (auth.currentUser) {
-        setUserOffline(auth.currentUser.uid);
-      }
-
+      setUserPresence(false);
       unsubPresence();
       unsubTyping();
 
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('online', () => handleNetworkChange(true));
+      window.removeEventListener('offline', () => handleNetworkChange(false));
     };
-  }, [initPresence, initTyping, setUserOnline, setUserOffline]); // cleanup was removed from dependencies
+  }, [
+    initPresence,
+    initTyping,
+    setUserPresence,
+    handleVisibilityChange,
+    handleBeforeUnload,
+    handleNetworkChange,
+  ]);
 
   useEffect(() => {
     if (!loading && !user) {
