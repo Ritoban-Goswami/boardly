@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import PresenceAvatars from './PresenceAvatars';
+import NotificationIcon from './NotificationIcon';
 import { useCallback } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -45,6 +46,7 @@ export default function Navbar() {
           </Link>
           <div className="flex items-center gap-2">
             <PresenceAvatars />
+            <NotificationIcon />
             <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
