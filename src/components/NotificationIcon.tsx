@@ -11,9 +11,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function NotificationIcon() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 425);
+    };
+
+    // Initial check
+    checkIfMobile();
+
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIfMobile);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
   const [open, setOpen] = useState(false);
 
   // Hardcoded data for demo purposes
@@ -78,7 +94,7 @@ export default function NotificationIcon() {
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent align={isMobile ? 'center' : 'end'} className="w-80">
         <div className="flex items-center justify-between p-2">
           <DropdownMenuLabel className="font-semibold">Notifications</DropdownMenuLabel>
           {unreadCount > 0 && (
