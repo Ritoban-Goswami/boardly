@@ -11,6 +11,7 @@ import { useTasksStore } from '@/store/useTasks';
 import { auth } from '@/lib/firebase';
 import { usePresenceStore } from '@/store/usePresence';
 import { useUsersStore } from '@/store/useUsers';
+import { useNotificationsStore } from '@/store/useNotifications';
 
 const columns = [
   { id: 'todo' as const, title: 'To Do', accent: 'blue' as const },
@@ -45,9 +46,14 @@ export default function KanbanBoard() {
   useEffect(() => {
     const unsubTasks = useTasksStore.getState().initListener();
     const unsubUsers = useUsersStore.getState().initListener();
+    const unsubNotifications =
+      (auth.currentUser?.uid &&
+        useNotificationsStore.getState().initListener(auth.currentUser.uid)) ||
+      (() => {});
     return () => {
       unsubTasks();
       unsubUsers();
+      unsubNotifications();
     };
   }, []);
 
