@@ -74,3 +74,37 @@ type TaskUpdate = {
     order: number;
   };
 };
+
+// Notification Types
+type NotificationType =
+  | 'task_assigned'
+  | 'task_status_changed'
+  | 'task_priority_updated'
+  | 'task_mentioned'
+  | 'user_joined_board'
+  | 'user_left_board'
+  | 'user_editing_task'
+  | 'task_completed'
+  | 'board_access_granted'
+  | 'board_access_revoked';
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+interface AppNotification {
+  id: string;
+  userId: string; // Recipient
+  type: NotificationType;
+  title: string; // Short notification title
+  message: string; // Detailed message
+  actorId?: string; // Who triggered the notification
+  read: boolean; // Read status
+  createdAt: TimestampLike;
+}
+
+type TimestampLike = Date | null;
+
+interface NotificationsState {
+  notifications: AppNotification[];
+  loading: boolean;
+  initListener: (userId: string) => () => void;
+}

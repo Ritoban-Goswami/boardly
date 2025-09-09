@@ -11,6 +11,7 @@ import {
   query,
   orderBy,
   serverTimestamp,
+  where,
 } from 'firebase/firestore';
 
 // COLLECTION REFERENCE
@@ -87,4 +88,24 @@ export const createUserInFirestore = async (user: User) => {
     },
     { merge: true }
   );
+};
+
+// Get Notifications (Real-time listener)
+export const listenToNotifications = (
+  userId: string,
+  callback: (notifications: AppNotification[]) => void
+) => {
+  const notificationsCol = collection(db, 'notifications');
+  const q = query(notificationsCol, where('userId', '==', userId), orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    const notifications = snapshot.docs.map((doc) => {
+      const createdAt =
+        doc.data()?.createdAt?.toDate?.() ??
+        (doc.data()?.createdAt?.seconds
+          ? new Date(doc.data().createdAt.seconds * 1000)
+          : (doc.data()?.createdAt ?? null));
+      return { id: doc.id, ...doc.data(), createdAt } as AppNotification;
+    });
+    callback(notifications);
+  });
 };

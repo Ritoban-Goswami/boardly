@@ -12,65 +12,21 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useState, useEffect } from 'react';
+import { useNotificationsStore } from '@/store/useNotifications';
 
 export default function NotificationIcon() {
   const [isMobile, setIsMobile] = useState(false);
+  const [open, setOpen] = useState(false);
+  const { notifications } = useNotificationsStore();
 
   useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 425);
-    };
-
-    // Initial check
-    checkIfMobile();
-
-    // Add event listener for window resize
-    window.addEventListener('resize', checkIfMobile);
-
-    // Cleanup
-    return () => window.removeEventListener('resize', checkIfMobile);
+    const handleResize = () => setIsMobile(window.innerWidth < 425);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
-  const [open, setOpen] = useState(false);
 
   // Hardcoded data for demo purposes
   const unreadCount = 3;
-  const notifications = [
-    {
-      id: '1',
-      title: 'Task Assigned',
-      message: 'You have been assigned to "Design new landing page"',
-      read: false,
-      createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    },
-    {
-      id: '2',
-      title: 'Board Updated',
-      message: 'The "Marketing Campaign" board has been updated with new tasks',
-      read: false,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    },
-    {
-      id: '3',
-      title: 'Team Member Joined',
-      message: 'Sarah Johnson has joined the "Product Development" board',
-      read: false,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4), // 4 hours ago
-    },
-    {
-      id: '4',
-      title: 'Task Completed',
-      message: 'The task "Review user feedback" has been marked as completed',
-      read: true,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6), // 6 hours ago
-    },
-    {
-      id: '5',
-      title: 'Priority Changed',
-      message: 'The priority of "Bug fix #123" has been updated to High',
-      read: true,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8), // 8 hours ago
-    },
-  ];
 
   const handleNotificationClick = (notificationId: string, isRead: boolean) => {
     // For demo purposes, just log the action
@@ -156,7 +112,7 @@ export default function NotificationIcon() {
                         {notification.message}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {notification.createdAt.toLocaleDateString()}
+                        {notification.createdAt?.toLocaleDateString()}
                       </p>
                     </div>
                   </div>
