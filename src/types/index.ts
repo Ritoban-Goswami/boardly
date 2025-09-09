@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 interface User {
   uid: string;
   email: string | null;
@@ -87,8 +88,6 @@ type NotificationType =
   | 'task_completed'
   | 'board_access_granted'
   | 'board_access_revoked';
-
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
 interface AppNotification {
   id: string;
