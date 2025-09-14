@@ -106,4 +106,5 @@ interface NotificationsState {
   notifications: AppNotification[];
   loading: boolean;
   initListener: (userId: string) => () => void;
+  markAsRead: (notificationId: string) => Promise<void>;
 }
