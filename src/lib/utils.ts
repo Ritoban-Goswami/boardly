@@ -51,3 +51,24 @@ export const stringToColor = (str: string) => {
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+export const formatDate = (dateInput: Date | { seconds: number } | string | null): string => {
+  if (!dateInput) return 'N/A';
+
+  const date =
+    typeof dateInput === 'string'
+      ? new Date(dateInput)
+      : 'seconds' in dateInput
+        ? new Date(dateInput.seconds * 1000)
+        : dateInput;
+
+  return isNaN(date.getTime())
+    ? 'Invalid date'
+    : date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+};

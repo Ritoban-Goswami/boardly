@@ -90,6 +90,15 @@ export const createUserInFirestore = async (user: User) => {
   );
 };
 
+// Update notification read status
+export const markNotificationAsRead = async (notificationId: string) => {
+  const notificationRef = doc(db, 'notifications', notificationId);
+  return await updateDoc(notificationRef, {
+    read: true,
+    updatedAt: serverTimestamp(),
+  });
+};
+
 // Get Notifications (Real-time listener)
 export const listenToNotifications = (
   userId: string,
