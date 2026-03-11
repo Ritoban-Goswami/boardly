@@ -1,5 +1,7 @@
 # Boardly - Collaborative Task Management Board
 
+🔗 **Live Demo:** https://boardlyv1.vercel.app
+
 [![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=white)](https://firebase.google.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -19,33 +21,30 @@ A modern, real-time collaborative task management board application built with N
 
 ## Tech Stack
 
-- **Frontend**:
-  - Next.js 13+ (App Router)
-  - React 18+
-  - TypeScript
-  - Tailwind CSS
-  - Radix UI (accessible UI components)
-  - React Beautiful DnD (drag and drop)
+**Framework**
+- Next.js (App Router)
+- React
+- TypeScript
 
-- **Backend & Database**:
-  - Firebase Authentication
-  - Cloud Firestore (NoSQL database)
-  - Firebase Realtime Database (presence and typing indicators)
+**UI**
+- Tailwind CSS
+- Radix UI
+- React Beautiful DnD
 
-- **State Management**:
-  - Zustand (lightweight state management)
+**Backend & Data**
+- Firebase Authentication
+- Cloud Firestore
+- Firebase Realtime Database
 
-- **Development Tools**:
-  - ESLint (code linting)
-  - Prettier (code formatting)
-  - TypeScript (type checking)
+**State Management**
+- Zustand
 
 ## Getting Started
 
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/yourusername/boardly.git
+   git clone https://github.com/Ritoban-Goswami/boardly.git
    cd boardly
    ```
 
@@ -157,7 +156,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the MIT License.
-
-## Links
-
-- [Live Demo](https://boardlyv1.vercel.app/) (Add your live demo link here)
