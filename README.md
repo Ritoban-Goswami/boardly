@@ -12,32 +12,47 @@ A modern, real-time collaborative task management board application built with N
 
 ## Features
 
-- **Real-time Collaboration**: See team members' activities and updates instantly
-- **Interactive Kanban Board**: Drag-and-drop interface for managing tasks across columns
+- **Real-time Collaboration**: Live presence indicators and typing status via Realtime DB; task updates via Firestore
+- **Interactive Kanban Board**: Drag-and-drop interface with @hello-pangea/dnd for ordering tasks within and across columns
 - **User Authentication**: Secure signup and login with Firebase Authentication
-- **Task Management**: Create, edit, and delete tasks with rich details
-- **Responsive Design**: Works seamlessly across desktop and mobile devices
-- **Presence Indicators**: See who's online and what they're working on
+- **Task Management**: Create, edit, and delete tasks with title, description, priority (low/medium/high), labels, and assignments
+- **In-app Notifications**: Real-time notification system for task assignments, status changes, and team activity
+- **Presence Indicators**: See who's online with avatar stack in the navbar
+- **Typing Indicators**: See when other users are editing a task
+- **Responsive Design**: Mobile-friendly UI with Tailwind CSS v4
+- **Dark Mode Support**: Built-in theme switching with next-themes
 
 ## Tech Stack
 
 **Framework**
+
 - Next.js (App Router)
 - React
 - TypeScript
 
 **UI**
-- Tailwind CSS
+
+- Tailwind CSS v4
 - Radix UI
-- React Beautiful DnD
+- shadcn/ui
+- @hello-pangea/dnd (React Beautiful DnD for React 19)
 
 **Backend & Data**
+
 - Firebase Authentication
 - Cloud Firestore
 - Firebase Realtime Database
 
 **State Management**
+
 - Zustand
+
+**Dev Tools**
+
+- ESLint 9 + eslint-config-next
+- Prettier + prettier-plugin-tailwindcss
+- Husky + lint-staged (pre-commit hooks)
+- TypeScript (strict mode)
 
 ## Getting Started
 
@@ -70,6 +85,7 @@ A modern, real-time collaborative task management board application built with N
      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
      NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
      NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
+     NEXT_PUBLIC_FIREBASE_DATABASE_URL=your_database_url
      ```
 
 4. **Run the development server**
@@ -82,6 +98,16 @@ A modern, real-time collaborative task management board application built with N
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
+## Available Scripts
+
+- `npm run dev` - Start development server with Turbopack
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run lint:fix` - Run ESLint with auto-fix
+- `npm run format` - Format code with Prettier
+- `npm run type-check` - Run TypeScript type checking
+
 ## Project Structure
 
 ```
@@ -89,18 +115,29 @@ src/
 ├── app/                    # App router pages and layouts
 │   ├── (protected)/        # Protected routes (require authentication)
 │   │   └── board/          # Main board page
-│   ├── login/              # Login page
-│   └── signup/             # Signup page
+│   └── auth/               # Authentication pages
+│       ├── login/          # Login page
+│       └── signup/         # Signup page
 ├── components/             # Reusable UI components
-│   ├── ui/                 # Shadcn/ui components
-│   ├── KanbanBoard.tsx     # Main board component
-│   ├── TaskCard.tsx        # Task card component
+│   ├── ui/                 # shadcn/ui components (Button, Card, Dialog, etc.)
+│   ├── KanbanBoard.tsx     # Main drag-and-drop board
+│   ├── TaskCard.tsx        # Task card with priority badges
+│   ├── TaskDialog.tsx      # Add/Edit task modal
+│   ├── PresenceAvatars.tsx # Online user indicators
+│   ├── NotificationIcon.tsx # Notification dropdown
 │   └── ...
 ├── lib/                    # Utility functions and configurations
-│   └── firebase.ts         # Firebase initialization
-└── stores/                 # Zustand stores
-    ├── task-store.ts       # Task management store
-    └── auth-store.ts       # Authentication store
+│   ├── firebase.ts         # Firebase initialization
+│   ├── firestore.ts        # Firestore database operations
+│   ├── realtime.ts         # Realtime database operations
+│   └── utils.ts            # Utility helpers (cn, getInitials, etc.)
+├── store/                  # Zustand stores
+│   ├── useTasks.ts         # Task management store
+│   ├── usePresence.ts      # Online presence store
+│   ├── useNotifications.ts # Notifications store
+│   └── useUsers.ts         # Users store
+└── types/                  # TypeScript type definitions
+    └── index.ts            # All interfaces and types
 ```
 
 ## Key Implementation Details
@@ -113,9 +150,13 @@ src/
 
 ### State Management
 
-- Combines Zustand for client state
-- Implements optimistic updates for a snappy UI
-- Centralized stores for better state organization
+- **Zustand stores** for modular state management:
+  - `useTasks.ts` - Firestore task CRUD with real-time listeners
+  - `usePresence.ts` - Realtime DB for online status and typing indicators
+  - `useNotifications.ts` - User notification management
+  - `useUsers.ts` - Cached user data for assignments
+- Optimistic UI updates for drag-and-drop task reordering
+- Real-time listeners with automatic cleanup on unmount
 
 ### Performance Optimizations
 
