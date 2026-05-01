@@ -1,6 +1,7 @@
 // store/useNotifications.ts
 import { create } from 'zustand';
 import { listenToNotifications, markNotificationAsRead } from '@/lib/firestore';
+import type { NotificationsState, AppNotification } from '@/types';
 
 export const useNotificationsStore = create<NotificationsState>((set) => ({
   notifications: [],

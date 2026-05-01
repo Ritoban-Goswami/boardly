@@ -1,17 +1,19 @@
-// components/KanbanBoard.tsx
+//'use client';
+import { useState, useEffect, useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import React, { useEffect, useState, useMemo } from 'react';
-import TaskCard from './TaskCard';
-import DeleteDialog from './DeleteDialog';
-import TaskDialog from './TaskDialog';
-import { cn } from '@/lib/utils';
-import { Button } from './ui/button';
-import { Plus } from 'lucide-react';
 import { useTasksStore } from '@/store/useTasks';
-import { auth } from '@/lib/firebase';
-import { usePresenceStore } from '@/store/usePresence';
 import { useUsersStore } from '@/store/useUsers';
+import { usePresenceStore } from '@/store/usePresence';
 import { useNotificationsStore } from '@/store/useNotifications';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import TaskCard from './TaskCard';
+import TaskDialog from './TaskDialog';
+import DeleteDialog from './DeleteDialog';
+import { cn } from '@/lib/utils';
+import { auth } from '@/lib/firebase';
+import type { Task, ColumnId, TaskViewer, TaskUpdate } from '@/types';
+import React from 'react';
 
 const columns = [
   { id: 'todo' as const, title: 'To Do', accent: 'blue' as const },
@@ -44,14 +46,12 @@ export default function KanbanBoard() {
   }, [dialogOpen, dialogTask?.id, setTyping]);
 
   useEffect(() => {
-    const unsubTasks = useTasksStore.getState().initListener();
     const unsubUsers = useUsersStore.getState().initListener();
     const unsubNotifications =
       (auth.currentUser?.uid &&
         useNotificationsStore.getState().initListener(auth.currentUser.uid)) ||
       (() => {});
     return () => {
-      unsubTasks();
       unsubUsers();
       unsubNotifications();
     };

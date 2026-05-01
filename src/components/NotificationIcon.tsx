@@ -3,17 +3,19 @@
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
+import { CardContent } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuTrigger,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useState, useEffect } from 'react';
 import { useNotificationsStore } from '@/store/useNotifications';
 import { NotificationDialog } from './NotificationDialog';
+import type { AppNotification } from '@/types';
 
 export default function NotificationIcon() {
   const [isMobile, setIsMobile] = useState(false);
