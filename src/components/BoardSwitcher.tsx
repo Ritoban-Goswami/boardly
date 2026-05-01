@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Plus, Layout, Users, Settings, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +24,10 @@ interface BoardSwitcherProps {
 export default function BoardSwitcher({ className }: BoardSwitcherProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentBoardId, setCurrentBoardId] = useState('1');
+  const params = useParams();
+
+  // Get current board ID from URL
+  const currentBoardId = (params.id as string) || '1';
 
   const filteredBoards = mockBoards.filter((board) =>
     board.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -81,11 +86,11 @@ export default function BoardSwitcher({ className }: BoardSwitcherProps) {
         <div className="flex-1 overflow-y-auto">
           <div className="space-y-1 p-2">
             {filteredBoards.map((board) => (
-              <button
+              <Link
                 key={board.id}
-                onClick={() => setCurrentBoardId(board.id)}
+                href={`/board/${board.id}`}
                 className={cn(
-                  'w-full rounded-lg p-3 text-left transition-colors hover:bg-accent',
+                  'w-full rounded-lg p-3 text-left transition-colors hover:bg-accent block',
                   currentBoardId === board.id ? 'bg-accent' : 'transparent'
                 )}
               >
@@ -111,7 +116,7 @@ export default function BoardSwitcher({ className }: BoardSwitcherProps) {
                     <div className="absolute right-2 h-2 w-2 rounded-full bg-primary" />
                   )}
                 </div>
-              </button>
+              </Link>
             ))}
           </div>
         </div>
