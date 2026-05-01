@@ -1,7 +1,8 @@
 // store/usePresence.ts
 import { create } from 'zustand';
+import { listenToPresence } from '@/lib/realtime';
+import type { PresenceState, PresenceData } from '@/types';
 import {
-  listenToPresence,
   setUserPresence,
   setUserOffline,
   removeUserPresence,

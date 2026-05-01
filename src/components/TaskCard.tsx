@@ -1,11 +1,13 @@
 'use client';
-
+import { Card } from '@/components/ui/card';
+import { CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
+import { getInitials, stringToColor } from '@/lib/utils';
+import type { Task, UserInfo } from '@/types';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { cn, getInitials, stringToColor } from '@/lib/utils';
 import { Button } from './ui/button';
 import { Pencil, Trash2, Tag, Eye } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useUsersStore } from '@/store/useUsers';
 
 interface TaskCardProps {

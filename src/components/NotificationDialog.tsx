@@ -2,6 +2,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatDate } from '@/lib/utils';
+import type { AppNotification } from '@/types';
 
 interface NotificationDialogProps {
   notification: AppNotification | null;

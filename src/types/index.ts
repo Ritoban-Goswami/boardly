@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-interface User {
+export interface User {
   uid: string;
   email: string | null;
   displayName: string | null;
 }
 
-interface UsersState {
+export interface UsersState {
   users: User[];
   loading: boolean;
   initListener: () => () => void;
@@ -14,15 +13,15 @@ interface UsersState {
 // Structure: { [taskId: string]: { [userId: string]: boolean } }
 type TypingStateType = Record<string, Record<string, boolean>>;
 
-interface TypingState {
+export interface TypingState {
   typing: TypingStateType;
   initListener: () => () => void;
   setTyping: (taskId: string, isTyping: boolean) => void;
 }
 
-type ColumnId = 'todo' | 'in-progress' | 'done' | 'review';
+export type ColumnId = 'todo' | 'in-progress' | 'done' | 'review';
 
-interface Task {
+export interface Task {
   id: string;
   title: string;
   status: ColumnId;
@@ -33,23 +32,22 @@ interface Task {
   order: number; // Used for sorting tasks within a column
 }
 
-interface TasksState {
+export interface TasksState {
   tasks: Task[];
   loading: boolean;
-  initListener: () => () => void;
-  addTask: (data: Omit<Task, 'id'>) => Promise<void>;
-  updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
+  addTask: (data: Omit<Task, 'id'>) => Promise<string>;
+  updateTask: (id: string, updates: Partial<Omit<Task, 'id'>>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
 }
 
-interface PresenceData {
+export interface PresenceData {
   displayName: string;
   online: boolean;
   lastSeen: number;
   currentTaskViewing?: string;
 }
 
-interface PresenceState {
+export interface PresenceState {
   presence: Record<string, PresenceData>;
   initListener: () => () => void;
   setUserOnline: (userId: string, displayName: string) => void;
@@ -58,21 +56,22 @@ interface PresenceState {
   setTyping: (taskId: string, isTyping: boolean) => void;
 }
 
-interface UserInfo {
+export interface UserInfo {
+  id: string;
+  displayName: string;
+  avatar?: string;
+}
+
+export interface TaskViewer {
   id: string;
   displayName: string;
 }
 
-interface TaskViewer {
-  id: string;
-  displayName: string;
-}
-
-type TaskUpdate = {
+export type TaskUpdate = {
   id: string;
   updates: {
     status?: ColumnId;
-    order: number;
+    order?: number;
   };
 };
 
@@ -89,7 +88,7 @@ type NotificationType =
   | 'board_access_granted'
   | 'board_access_revoked';
 
-interface AppNotification {
+export interface AppNotification {
   id: string;
   userId: string; // Recipient
   type: NotificationType;
@@ -102,9 +101,30 @@ interface AppNotification {
 
 type TimestampLike = Date | null;
 
-interface NotificationsState {
+export interface NotificationsState {
   notifications: AppNotification[];
   loading: boolean;
   initListener: (userId: string) => () => void;
   markAsRead: (notificationId: string) => Promise<void>;
+}
+
+// Board types
+export interface Board {
+  id: string;
+  name: string;
+  description?: string;
+  color: string;
+  createdAt: TimestampLike;
+  updatedAt: TimestampLike;
+  ownerId: string;
+  members: string[];
+}
+
+export interface BoardsState {
+  boards: Board[];
+  loading: boolean;
+  initListener: () => () => void;
+  createBoard: (data: Omit<Board, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>;
+  updateBoard: (id: string, updates: Partial<Omit<Board, 'id'>>) => Promise<void>;
+  deleteBoard: (id: string) => Promise<void>;
 }

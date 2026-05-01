@@ -1,6 +1,7 @@
 // lib/realtime.ts
-import { ref, onValue, remove, update } from 'firebase/database';
+import type { PresenceData } from '@/types';
 import { auth, rtdb } from './firebase';
+import { ref, update, remove, onValue } from 'firebase/database';
 
 // Presence
 export const setUserPresence = (userId: string, displayName: string) => {
@@ -49,7 +50,9 @@ export const setTypingStatus = (taskId: string, isTyping: boolean) => {
   const userId = auth.currentUser.uid;
   const userRef = ref(rtdb, `presence/${userId}`);
 
-  isTyping
-    ? update(userRef, { currentTaskViewing: taskId })
-    : remove(ref(rtdb, `presence/${userId}/currentTaskViewing`));
+  if (isTyping) {
+    update(userRef, { currentTaskViewing: taskId });
+  } else {
+    remove(ref(rtdb, `presence/${userId}/currentTaskViewing`));
+  }
 };

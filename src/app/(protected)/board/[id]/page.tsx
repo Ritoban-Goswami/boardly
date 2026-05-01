@@ -6,30 +6,25 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { useParams } from 'next/navigation';
 import KanbanBoard from '@/components/KanbanBoard';
 import { usePresenceStore } from '@/store/usePresence';
+import { useTasksStore } from '@/store/useTasks';
+import { useBoards } from '@/store/useBoards';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Home } from 'lucide-react';
-
-// Mock board data - should match BoardSwitcher data
-const mockBoards = [
-  { id: '1', name: 'Marketing Campaign', color: 'bg-blue-500', memberCount: 5 },
-  { id: '2', name: 'Product Roadmap', color: 'bg-purple-500', memberCount: 8 },
-  { id: '3', name: 'Design System', color: 'bg-pink-500', memberCount: 3 },
-  { id: '4', name: 'Sprint Planning', color: 'bg-green-500', memberCount: 6 },
-  { id: '5', name: 'Bug Tracking', color: 'bg-red-500', memberCount: 4 },
-];
 
 export default function BoardPage() {
   const router = useRouter();
   const params = useParams();
   const [user, loading] = useAuthState(auth);
   const { initListener: initPresence, setUserOnline, setUserOffline } = usePresenceStore();
+  const setBoardId = useTasksStore((state) => state.setBoardId);
+  const { boards, loading: boardsLoading } = useBoards();
 
   // Get board ID from URL
   const boardId = params.id as string;
 
-  // Check if board ID exists
-  const boardExists = mockBoards.some((board) => board.id === boardId);
-  const currentBoard = mockBoards.find((board) => board.id === boardId);
+  // Check if board ID exists in user's boards
+  const currentBoard = boards.find((board) => board.id === boardId);
+  const boardExists = !!currentBoard;
 
   // Presence management functions
   const setUserPresence = useCallback(
@@ -71,11 +66,15 @@ export default function BoardPage() {
     // Set up listeners
     const unsubPresence = initPresence();
 
+    // Store references for cleanup
+    const handleOnline = () => handleNetworkChange(true);
+    const handleOffline = () => handleNetworkChange(false);
+
     // Add event listeners
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('online', () => handleNetworkChange(true));
-    window.addEventListener('offline', () => handleNetworkChange(false));
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     // Cleanup function
     return () => {
@@ -84,8 +83,8 @@ export default function BoardPage() {
 
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('online', () => handleNetworkChange(true));
-      window.removeEventListener('offline', () => handleNetworkChange(false));
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
   }, [
     initPresence,
@@ -100,6 +99,25 @@ export default function BoardPage() {
       router.replace('/auth/login');
     }
   }, [user, loading, router]);
+
+  // Set board ID for tasks when board exists
+  useEffect(() => {
+    if (boardExists && boardId) {
+      setBoardId(boardId);
+    }
+  }, [boardExists, boardId, setBoardId]);
+
+  // Show loading state while boards are loading
+  if (boardsLoading) {
+    return (
+      <main className="flex-1 overflow-auto flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading board...</p>
+        </div>
+      </main>
+    );
+  }
 
   // Show error page if board doesn't exist
   if (!boardExists) {
@@ -119,9 +137,9 @@ export default function BoardPage() {
               <ArrowLeft className="h-4 w-4" />
               Go Back
             </Button>
-            <Button onClick={() => router.push('/board/1')} className="gap-2">
+            <Button onClick={() => router.push('/board')} className="gap-2">
               <Home className="h-4 w-4" />
-              Go to Default Board
+              All Boards
             </Button>
           </div>
         </div>
@@ -134,10 +152,6 @@ export default function BoardPage() {
       <div className="container mx-auto px-0 lg:px-4 pb-8 pt-4">
         {/* You can pass boardId to KanbanBoard if needed */}
         <KanbanBoard />
-        {/* Debug: Show current board ID */}
-        <div className="fixed bottom-4 right-4 bg-muted px-3 py-1 rounded-md text-sm">
-          Board ID: {boardId} - {currentBoard?.name}
-        </div>
       </div>
     </main>
   );
