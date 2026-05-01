@@ -5,6 +5,7 @@ import { useEffect, useCallback } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import KanbanBoard from '@/components/KanbanBoard';
 import Navbar from '@/components/Navbar';
+import BoardSwitcher from '@/components/BoardSwitcher';
 import { usePresenceStore } from '@/store/usePresence';
 
 export default function Home() {
@@ -85,9 +86,14 @@ export default function Home() {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <main className="container mx-auto px-0 lg:px-4 pb-8 pt-4">
-        <KanbanBoard />
-      </main>
+      <div className="flex h-[calc(100dvh-56px)]">
+        <BoardSwitcher />
+        <main className="flex-1 overflow-auto">
+          <div className="container mx-auto px-0 lg:px-4 pb-8 pt-4">
+            <KanbanBoard />
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
