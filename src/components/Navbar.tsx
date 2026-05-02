@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { CheckSquare, LogOut, Share2, Trash2, MoreHorizontal } from 'lucide-react';
+import { CheckSquare, LogOut, Share2, Trash2, MoreHorizontal, Plus } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,6 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { CreateBoardModal } from './CreateBoardModal';
 
 export default function Navbar() {
   const router = useRouter();
@@ -39,6 +40,7 @@ export default function Navbar() {
   const { boards, deleteBoard } = useBoards();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const boardId = params.id as string | undefined;
   const currentBoard = boardId ? boards.find((b) => b.id === boardId) : undefined;
@@ -117,6 +119,15 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             <PresenceAvatars />
             <NotificationIcon />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCreateModal(true)}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">New board</span>
+            </Button>
             <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -170,6 +181,9 @@ export default function Navbar() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Create Board Modal */}
+      <CreateBoardModal open={showCreateModal} onOpenChange={setShowCreateModal} />
     </>
   );
 }
