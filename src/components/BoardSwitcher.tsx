@@ -3,12 +3,28 @@
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Plus, Layout, Users, Settings, Search } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Layout,
+  Users,
+  Settings,
+  Search,
+  MoreHorizontal,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useBoards } from '@/store/useBoards';
-import { CreateBoardModal } from './CreateBoardModal';
+import { EditBoardModal } from './EditBoardModal';
+import type { Board } from '@/types';
 
 interface BoardSwitcherProps {
   className?: string;
@@ -17,7 +33,8 @@ interface BoardSwitcherProps {
 export default function BoardSwitcher({ className }: BoardSwitcherProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const params = useParams();
   const { boards, loading } = useBoards();
 
@@ -27,6 +44,11 @@ export default function BoardSwitcher({ className }: BoardSwitcherProps) {
   const filteredBoards = boards.filter((board) =>
     board.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleOpenEditModal = (board: Board) => {
+    setEditingBoard(board);
+    setShowEditModal(true);
+  };
 
   return (
     <>
@@ -97,64 +119,65 @@ export default function BoardSwitcher({ className }: BoardSwitcherProps) {
                     </div>
                   ))
                 : filteredBoards.map((board) => (
-                    <Link
-                      key={board.id}
-                      href={`/board/${board.id}`}
-                      className={cn(
-                        'w-full rounded-lg p-3 text-left transition-colors hover:bg-accent block',
-                        currentBoardId === board.id ? 'bg-accent' : 'transparent'
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        {/* Board Color Indicator */}
-                        <div className={cn('h-3 w-3 rounded-full flex-shrink-0', board.color)} />
-
-                        {/* Board Info - Hidden when collapsed */}
-                        {!isCollapsed && (
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium">{board.name}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Users className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">
-                                {board.members.length} members
-                              </span>
-                            </div>
-                          </div>
+                    <div key={board.id} className="relative group">
+                      <Link
+                        href={`/board/${board.id}`}
+                        className={cn(
+                          'w-full rounded-lg p-3 text-left transition-colors hover:bg-accent block',
+                          currentBoardId === board.id ? 'bg-accent' : 'transparent'
                         )}
-                      </div>
-                    </Link>
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* Board Color Indicator */}
+                          <div className={cn('h-3 w-3 rounded-full flex-shrink-0', board.color)} />
+
+                          {/* Board Info - Hidden when collapsed */}
+                          {!isCollapsed && (
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium">{board.name}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Users className="h-3 w-3 text-muted-foreground" />
+                                <span className="text-xs text-muted-foreground">
+                                  {board.members.length} members
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+
+                      {/* Kebab Menu - Only show when not collapsed */}
+                      {!isCollapsed && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => e.preventDefault()}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleOpenEditModal(board)}
+                              className="cursor-pointer"
+                            >
+                              Edit board
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
                   ))}
             </div>
-          </div>
-
-          {/* Bottom Actions */}
-          <div className="p-2 border-t">
-            {/* Create Board Button */}
-            <Button
-              variant="ghost"
-              onClick={() => setShowCreateModal(true)}
-              className={cn(
-                'w-full justify-start gap-3 h-10',
-                isCollapsed && 'justify-center px-0'
-              )}
-            >
-              <Plus className="h-4 w-4 flex-shrink-0" />
-              {!isCollapsed && 'Create board'}
-            </Button>
-
-            {/* Settings Button - Only when not collapsed */}
-            {!isCollapsed && (
-              <Button variant="ghost" className="w-full justify-start gap-3 h-10 mt-1">
-                <Settings className="h-4 w-4" />
-                <span>Settings</span>
-              </Button>
-            )}
           </div>
         </div>
       </div>
 
-      {/* Create Board Modal */}
-      <CreateBoardModal open={showCreateModal} onOpenChange={setShowCreateModal} />
+      {/* Edit Board Modal */}
+      <EditBoardModal open={showEditModal} onOpenChange={setShowEditModal} board={editingBoard} />
     </>
   );
 }
