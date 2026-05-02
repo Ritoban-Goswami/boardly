@@ -137,7 +137,7 @@ export default function BoardPage() {
               <ArrowLeft className="h-4 w-4" />
               Go Back
             </Button>
-            <Button onClick={() => router.push('/board')} className="gap-2">
+            <Button onClick={() => router.push('/')} className="gap-2">
               <Home className="h-4 w-4" />
               All Boards
             </Button>
