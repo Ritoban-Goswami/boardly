@@ -41,7 +41,7 @@ export function useBoards(): BoardsState {
         const boardId = await addBoardToFirestore({
           ...data,
           ownerId: user.uid,
-          members: data.members || [user.uid],
+          members: data.members?.length ? data.members : [user.uid],
         });
         return boardId;
       } catch (error) {
