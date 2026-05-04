@@ -2,18 +2,32 @@
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { usePresenceStore } from '@/store/usePresence';
+import { useBoards } from '@/store/useBoards';
 import { getInitials, stringToColor } from '@/lib/utils';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
+import { useParams } from 'next/navigation';
 
 export default function PresenceAvatars() {
   const { presence } = usePresenceStore();
+  const { boards } = useBoards();
   const [currentUser] = useAuthState(auth);
+  const params = useParams();
 
-  // Convert presence object to array of users and filter out current user
+  const boardId = params.id as string | undefined;
+  const currentBoard = boardId ? boards.find((b) => b.id === boardId) : undefined;
+  const boardMembers = currentBoard?.members;
+
+  // Convert presence object to array of users and filter out current user and non-members
   const users = presence
     ? Object.entries(presence)
-        .filter(([id]) => id !== currentUser?.uid) // Exclude current user
+        .filter(([id]) => {
+          // Exclude current user
+          if (id === currentUser?.uid) return false;
+          // Filter by board members if on a board page
+          if (boardMembers && !boardMembers.includes(id)) return false;
+          return true;
+        })
         .map(([id, userData]) => ({
           id,
           displayName: userData.displayName,
