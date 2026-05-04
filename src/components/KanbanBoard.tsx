@@ -5,11 +5,12 @@ import { useTasksStore } from '@/store/useTasks';
 import { useUsersStore } from '@/store/useUsers';
 import { usePresenceStore } from '@/store/usePresence';
 import { useNotificationsStore } from '@/store/useNotifications';
-import { Plus } from 'lucide-react';
+import { Plus, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import TaskCard from './TaskCard';
 import TaskDialog from './TaskDialog';
 import DeleteDialog from './DeleteDialog';
+import { InviteModal } from './InviteModal';
 import { cn } from '@/lib/utils';
 import { auth } from '@/lib/firebase';
 import type { Task, ColumnId, TaskViewer, TaskUpdate } from '@/types';
@@ -21,13 +22,21 @@ const columns = [
   { id: 'done' as const, title: 'Done', accent: 'green' as const },
 ];
 
-export default function KanbanBoard() {
+interface KanbanBoardProps {
+  boardId: string;
+  boardName: string;
+  members: string[];
+  ownerId: string;
+}
+
+export default function KanbanBoard({ boardId, boardName, members, ownerId }: KanbanBoardProps) {
   const { tasks, updateTask, deleteTask, addTask } = useTasksStore();
   const [dialogColumn, setDialogColumn] = useState<ColumnId>('todo');
   const [dialogTask, setDialogTask] = useState<Task>();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const { presence, setTyping } = usePresenceStore();
 
   useEffect(() => {
@@ -212,6 +221,15 @@ export default function KanbanBoard() {
 
   return (
     <>
+      {/* Board Header */}
+      <div className="flex items-center justify-between mb-4 px-4">
+        <h1 className="text-2xl font-bold">{boardName}</h1>
+        <Button onClick={() => setInviteOpen(true)} variant="outline" size="sm">
+          <UserPlus className="mr-2 h-4 w-4" />
+          Invite
+        </Button>
+      </div>
+
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="w-full overflow-x-auto pb-4 px-4">
           <div className="inline-flex justify-center items-start w-auto min-w-full gap-4">
@@ -246,6 +264,14 @@ export default function KanbanBoard() {
         onOpenChange={setDeleteOpen}
         title={dialogTask?.title ?? ''}
         onConfirm={confirmDelete}
+      />
+
+      <InviteModal
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        boardId={boardId}
+        boardName={boardName}
+        currentMembers={members}
       />
     </>
   );

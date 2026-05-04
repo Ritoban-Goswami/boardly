@@ -86,7 +86,10 @@ type NotificationType =
   | 'user_editing_task'
   | 'task_completed'
   | 'board_access_granted'
-  | 'board_access_revoked';
+  | 'board_access_revoked'
+  | 'board_invitation'
+  | 'invitation_accepted'
+  | 'invitation_declined';
 
 export interface AppNotification {
   id: string;
@@ -95,6 +98,7 @@ export interface AppNotification {
   title: string; // Short notification title
   message: string; // Detailed message
   actorId?: string; // Who triggered the notification
+  boardId?: string; // Related board ID (for invitations)
   read: boolean; // Read status
   createdAt: TimestampLike;
 }
