@@ -139,8 +139,12 @@ export default function BoardPage() {
   return (
     <main className="flex-1 overflow-auto">
       <div className="container mx-auto px-0 lg:px-4 pb-8 pt-4">
-        {/* You can pass boardId to KanbanBoard if needed */}
-        <KanbanBoard />
+        <KanbanBoard
+          boardId={currentBoard.id}
+          boardName={currentBoard.name}
+          members={currentBoard.members}
+          ownerId={currentBoard.ownerId}
+        />
       </div>
     </main>
   );

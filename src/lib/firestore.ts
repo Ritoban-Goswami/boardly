@@ -7,11 +7,13 @@ import {
   deleteDoc,
   doc,
   setDoc,
+  getDoc,
   onSnapshot,
   query,
   orderBy,
   serverTimestamp,
   where,
+  arrayUnion,
 } from 'firebase/firestore';
 import type { User, Task, Board, AppNotification, ColumnId } from '@/types';
 
@@ -108,6 +110,29 @@ export const createUserInFirestore = async (user: User) => {
   );
 };
 
+// Create Notification
+export const createNotification = async (
+  userId: string,
+  type: string,
+  title: string,
+  message: string,
+  actorId?: string,
+  boardId?: string
+) => {
+  const notificationsCol = collection(db, 'notifications');
+  const docRef = await addDoc(notificationsCol, {
+    userId,
+    type,
+    title,
+    message,
+    actorId,
+    boardId,
+    read: false,
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+};
+
 // Update notification read status
 export const markNotificationAsRead = async (notificationId: string) => {
   const notificationRef = doc(db, 'notifications', notificationId);
@@ -115,6 +140,89 @@ export const markNotificationAsRead = async (notificationId: string) => {
     read: true,
     updatedAt: serverTimestamp(),
   });
+};
+
+// Accept Board Invitation
+export const acceptBoardInvitation = async (
+  notificationId: string,
+  userId: string,
+  boardId: string
+) => {
+  const boardRef = doc(db, 'boards', boardId);
+  const notificationRef = doc(db, 'notifications', notificationId);
+  const userRef = doc(db, 'users', userId);
+
+  // Get notification data to find inviter
+  const notificationSnap = await getDoc(notificationRef);
+  const notificationData = notificationSnap.data();
+  const inviterId = notificationData?.actorId;
+
+  // Get user data to get display name
+  const userSnap = await getDoc(userRef);
+  const userData = userSnap.data();
+  const userDisplayName = userData?.displayName || 'A user';
+
+  // Add user to board members
+  await updateDoc(boardRef, {
+    members: arrayUnion(userId),
+    updatedAt: serverTimestamp(),
+  });
+
+  // Mark notification as read
+  await markNotificationAsRead(notificationId);
+
+  // Notify inviter that invitation was accepted
+  if (inviterId) {
+    const boardSnap = await getDoc(boardRef);
+    const boardData = boardSnap.data();
+    const boardName = boardData?.name || 'a board';
+
+    await createNotification(
+      inviterId,
+      'invitation_accepted',
+      'Invitation accepted',
+      `${userDisplayName} has accepted your invitation to join "${boardName}".`,
+      userId,
+      boardId
+    );
+  }
+};
+
+// Decline Board Invitation
+export const declineBoardInvitation = async (notificationId: string, userId: string) => {
+  const notificationRef = doc(db, 'notifications', notificationId);
+  const userRef = doc(db, 'users', userId);
+
+  // Get notification data to find inviter
+  const notificationSnap = await getDoc(notificationRef);
+  const notificationData = notificationSnap.data();
+  const inviterId = notificationData?.actorId;
+  const boardId = notificationData?.boardId;
+
+  // Get user data to get display name
+  const userSnap = await getDoc(userRef);
+  const userData = userSnap.data();
+  const userDisplayName = userData?.displayName || 'A user';
+
+  // Delete the notification
+  await deleteDoc(notificationRef);
+
+  // Notify inviter that invitation was declined
+  if (inviterId && boardId) {
+    const boardRef = doc(db, 'boards', boardId);
+    const boardSnap = await getDoc(boardRef);
+    const boardData = boardSnap.data();
+    const boardName = boardData?.name || 'a board';
+
+    await createNotification(
+      inviterId,
+      'invitation_declined',
+      'Invitation declined',
+      `${userDisplayName} has declined your invitation to join "${boardName}".`,
+      userId,
+      boardId
+    );
+  }
 };
 
 // Get Notifications (Real-time listener)

@@ -15,6 +15,8 @@ import {
 import { useState, useEffect } from 'react';
 import { useNotificationsStore } from '@/store/useNotifications';
 import { NotificationDialog } from './NotificationDialog';
+import { acceptBoardInvitation, declineBoardInvitation } from '@/lib/firestore';
+import { auth } from '@/lib/firebase';
 import type { AppNotification } from '@/types';
 
 export default function NotificationIcon() {
@@ -42,6 +44,31 @@ export default function NotificationIcon() {
   const handleDialogOpenChange = (open: boolean) => {
     if (!open) {
       setSelectedNotification(null);
+    }
+  };
+
+  const handleAcceptInvitation = async (notificationId: string) => {
+    const notification = notifications.find((n) => n.id === notificationId);
+    if (!notification || !notification.boardId) return;
+
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+
+    try {
+      await acceptBoardInvitation(notificationId, userId, notification.boardId);
+    } catch (error) {
+      console.error('Failed to accept invitation:', error);
+    }
+  };
+
+  const handleDeclineInvitation = async (notificationId: string) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+
+    try {
+      await declineBoardInvitation(notificationId, userId);
+    } catch (error) {
+      console.error('Failed to decline invitation:', error);
     }
   };
 
@@ -155,6 +182,8 @@ export default function NotificationIcon() {
       <NotificationDialog
         notification={selectedNotification}
         onOpenChange={handleDialogOpenChange}
+        onAcceptInvitation={handleAcceptInvitation}
+        onDeclineInvitation={handleDeclineInvitation}
       />
     </>
   );
