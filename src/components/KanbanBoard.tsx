@@ -5,12 +5,18 @@ import { useTasksStore } from '@/store/useTasks';
 import { useUsersStore } from '@/store/useUsers';
 import { usePresenceStore } from '@/store/usePresence';
 import { useNotificationsStore } from '@/store/useNotifications';
-import { Plus, UserPlus } from 'lucide-react';
+import { Plus, UserPlus, Users } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import TaskCard from './TaskCard';
 import TaskDialog from './TaskDialog';
 import DeleteDialog from './DeleteDialog';
 import { InviteModal } from './InviteModal';
+import { BoardMembersList } from './BoardMembersList';
 import { cn } from '@/lib/utils';
 import { auth } from '@/lib/firebase';
 import type { Task, ColumnId, TaskViewer, TaskUpdate } from '@/types';
@@ -31,6 +37,7 @@ interface KanbanBoardProps {
 
 export default function KanbanBoard({ boardId, boardName, members, ownerId }: KanbanBoardProps) {
   const { tasks, updateTask, deleteTask, addTask } = useTasksStore();
+  const { users } = useUsersStore();
   const [dialogColumn, setDialogColumn] = useState<ColumnId>('todo');
   const [dialogTask, setDialogTask] = useState<Task>();
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -38,6 +45,11 @@ export default function KanbanBoard({ boardId, boardName, members, ownerId }: Ka
   const [dialogOpen, setDialogOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const { presence, setTyping } = usePresenceStore();
+
+  const currentUserId = auth.currentUser?.uid;
+
+  // Get member user objects
+  const memberUsers = users.filter((user) => members.includes(user.uid));
 
   useEffect(() => {
     // Only set typing status if we have a valid task ID
@@ -224,10 +236,29 @@ export default function KanbanBoard({ boardId, boardName, members, ownerId }: Ka
       {/* Board Header */}
       <div className="flex items-center justify-between mb-4 px-4">
         <h1 className="text-2xl font-bold">{boardName}</h1>
-        <Button onClick={() => setInviteOpen(true)} variant="outline" size="sm">
-          <UserPlus className="mr-2 h-4 w-4" />
-          Invite
-        </Button>
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Users className="mr-2 h-4 w-4" />
+                Members
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80 p-0">
+              <div className="p-4">
+                <BoardMembersList
+                  members={memberUsers}
+                  ownerId={ownerId}
+                  currentUserId={currentUserId || ''}
+                />
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button onClick={() => setInviteOpen(true)} variant="outline" size="sm">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Invite
+          </Button>
+        </div>
       </div>
 
       <DragDropContext onDragEnd={onDragEnd}>
