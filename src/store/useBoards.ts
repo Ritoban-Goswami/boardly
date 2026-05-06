@@ -8,7 +8,7 @@ import {
   deleteBoard as deleteBoardFromFirestore,
   listenToUserBoards,
 } from '@/lib/firestore';
-import type { Board, BoardsState } from '@/types';
+import type { Board, BoardsState, Role } from '@/types';
 
 export function useBoards(): BoardsState {
   const [boards, setBoards] = useState<Board[]>([]);
@@ -41,7 +41,10 @@ export function useBoards(): BoardsState {
         const boardId = await addBoardToFirestore({
           ...data,
           ownerId: user.uid,
-          members: data.members?.length ? data.members : [user.uid],
+          members:
+            data.members && Object.keys(data.members).length > 0
+              ? data.members
+              : { [user.uid]: 'admin' as Role },
         });
         return boardId;
       } catch (error) {

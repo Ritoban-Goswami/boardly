@@ -49,7 +49,7 @@ export function CreateBoardModal({ open, onOpenChange }: CreateBoardModalProps) 
         description: description.trim() || undefined,
         color: selectedColor,
         ownerId: '', // Will be set by the hook
-        members: [], // Will be set by the hook
+        members: {}, // Will be set by the hook
       });
 
       // Reset form

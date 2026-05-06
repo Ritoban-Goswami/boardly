@@ -9,14 +9,14 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useUsersStore } from '@/store/useUsers';
 import { createNotification } from '@/lib/firestore';
 import { auth } from '@/lib/firebase';
-import type { User } from '@/types';
+import type { User, Role } from '@/types';
 
 interface InviteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   boardId: string;
   boardName: string;
-  currentMembers: string[];
+  currentMembers: Record<string, Role>;
 }
 
 export function InviteModal({
@@ -42,7 +42,7 @@ export function InviteModal({
     if (query.trim()) {
       const filtered = users.filter(
         (user) =>
-          !currentMembers.includes(user.uid) &&
+          !(user.uid in currentMembers) &&
           (user.displayName?.toLowerCase().includes(query.toLowerCase()) ||
             user.email?.toLowerCase().includes(query.toLowerCase()))
       );
