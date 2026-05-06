@@ -13,7 +13,6 @@ import {
   orderBy,
   serverTimestamp,
   where,
-  arrayUnion,
 } from 'firebase/firestore';
 import type { User, Task, Board, AppNotification, ColumnId, Role } from '@/types';
 
@@ -64,32 +63,44 @@ export const deleteTask = async (boardId: string, taskId: string) => {
 export const listenToTasks = (boardId: string, callback: (tasks: Task[]) => void) => {
   const boardTasksCol = collection(db, 'boards', boardId, 'tasks');
   const q = query(boardTasksCol, orderBy('order', 'asc'));
-  return onSnapshot(q, (snapshot) => {
-    const tasks = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      title: '',
-      status: 'todo' as ColumnId,
-      priority: 'medium' as const,
-      order: 0,
-      ...doc.data(),
-    }));
-    callback(tasks);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const tasks = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        title: '',
+        status: 'todo' as ColumnId,
+        priority: 'medium' as const,
+        order: 0,
+        ...doc.data(),
+      }));
+      callback(tasks);
+    },
+    (error) => {
+      console.error(`[Firestore] Failed to listen to tasks for board "${boardId}":`, error);
+    }
+  );
 };
 
 // Get Users (Real-time listener)
 export const listenToUsers = (callback: (users: User[]) => void) => {
   const usersCol = collection(db, 'users');
   const q = query(usersCol, orderBy('createdAt', 'asc'));
-  return onSnapshot(q, (snapshot) => {
-    const users = snapshot.docs.map((doc) => ({
-      uid: doc.id,
-      email: '',
-      displayName: '',
-      ...doc.data(),
-    }));
-    callback(users);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const users = snapshot.docs.map((doc) => ({
+        uid: doc.id,
+        email: '',
+        displayName: '',
+        ...doc.data(),
+      }));
+      callback(users);
+    },
+    (error) => {
+      console.error('[Firestore] Failed to listen to users collection:', error);
+    }
+  );
 };
 
 // Create or Update User
@@ -152,9 +163,28 @@ export const acceptBoardInvitation = async (
   const notificationRef = doc(db, 'notifications', notificationId);
   const userRef = doc(db, 'users', userId);
 
-  // Get notification data to find inviter
+  // Get notification data
   const notificationSnap = await getDoc(notificationRef);
+  if (!notificationSnap.exists()) {
+    throw new Error('Notification not found');
+  }
   const notificationData = notificationSnap.data();
+
+  // Verify notification belongs to user
+  if (notificationData?.userId !== userId) {
+    throw new Error('Notification does not belong to this user');
+  }
+
+  // Verify notification type is board_invitation
+  if (notificationData?.type !== 'board_invitation') {
+    throw new Error('This is not a board invitation notification');
+  }
+
+  // Verify boardId matches
+  if (notificationData?.boardId !== boardId) {
+    throw new Error('Board ID does not match the invitation');
+  }
+
   const inviterId = notificationData?.actorId;
 
   // Get user data to get display name
@@ -162,14 +192,24 @@ export const acceptBoardInvitation = async (
   const userData = userSnap.data();
   const userDisplayName = userData?.displayName || 'A user';
 
-  // Get current board data to add member with viewer role
+  // Get current board data
   const boardSnap = await getDoc(boardRef);
+  if (!boardSnap.exists()) {
+    throw new Error('Board not found');
+  }
   const boardData = boardSnap.data();
   const currentMembers = boardData?.members || {};
+  const currentMemberIds = boardData?.memberIds || [];
+
+  // Check if user is already a member
+  if (userId in currentMembers) {
+    throw new Error('User is already a member of this board');
+  }
 
   // Add user to board members with viewer role
   await updateDoc(boardRef, {
     members: { ...currentMembers, [userId]: 'viewer' as Role },
+    memberIds: [...currentMemberIds, userId],
     updatedAt: serverTimestamp(),
   });
 
@@ -235,43 +275,45 @@ export const listenToNotifications = (
 ) => {
   const notificationsCol = collection(db, 'notifications');
   const q = query(notificationsCol, where('userId', '==', userId), orderBy('createdAt', 'desc'));
-  return onSnapshot(q, (snapshot) => {
-    const notifications = snapshot.docs.map((doc) => {
-      const createdAt = parseTimestamp(doc.data()?.createdAt);
-      return { id: doc.id, ...doc.data(), createdAt } as AppNotification;
-    });
-    callback(notifications);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const notifications = snapshot.docs.map((doc) => {
+        const createdAt = parseTimestamp(doc.data()?.createdAt);
+        return { id: doc.id, ...doc.data(), createdAt } as AppNotification;
+      });
+      callback(notifications);
+    },
+    (error) => {
+      console.error(`[Firestore] Failed to listen to notifications for user "${userId}":`, error);
+    }
+  );
 };
 
 // BOARD OPERATIONS
 
 // Create Board
 export const addBoard = async (values: Omit<Board, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const memberIds = Object.keys(values.members);
+
+  // Filter out undefined values
+  const filteredValues = Object.entries(values).reduce(
+    (acc, [key, value]) => {
+      if (value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    },
+    {} as Record<string, unknown>
+  );
+
   const docRef = await addDoc(boardsCol, {
-    ...values,
+    ...filteredValues,
+    memberIds,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
   return docRef.id;
-};
-
-// Helper: Add member to board with specific role
-export const addBoardMember = async (boardId: string, userId: string, role: Role) => {
-  const boardRef = doc(db, 'boards', boardId);
-  const boardSnap = await getDoc(boardRef);
-  const boardData = boardSnap.data();
-  const currentMembers = boardData?.members || {};
-
-  // Check if user is already a member
-  if (userId in currentMembers) {
-    throw new Error('User is already a member of this board');
-  }
-
-  await updateDoc(boardRef, {
-    members: { ...currentMembers, [userId]: role },
-    updatedAt: serverTimestamp(),
-  });
 };
 
 // Helper: Remove member from board
@@ -280,11 +322,14 @@ export const removeBoardMember = async (boardId: string, userId: string) => {
   const boardSnap = await getDoc(boardRef);
   const boardData = boardSnap.data();
   const currentMembers = boardData?.members || {};
+  const currentMemberIds = boardData?.memberIds || [];
 
-  const { [userId]: removed, ...remainingMembers } = currentMembers;
+  const { [userId]: _removed, ...remainingMembers } = currentMembers;
+  const remainingMemberIds = currentMemberIds.filter((id: string) => id !== userId);
 
   await updateDoc(boardRef, {
     members: remainingMembers,
+    memberIds: remainingMemberIds,
     updatedAt: serverTimestamp(),
   });
 };
@@ -306,21 +351,40 @@ export const updateBoardMemberRole = async (boardId: string, userId: string, new
   });
 };
 
-// Helper: Get user's role on a board
-export const getUserBoardRole = async (boardId: string, userId: string): Promise<Role | null> => {
-  const boardRef = doc(db, 'boards', boardId);
-  const boardSnap = await getDoc(boardRef);
-  const boardData = boardSnap.data();
-  const members = boardData?.members || {};
-
-  return members[userId] || null;
-};
-
 // Update Board
-export const updateBoard = async (boardId: string, updates: Partial<Omit<Board, 'id'>>) => {
+export const updateBoard = async (
+  boardId: string,
+  updates: Partial<Omit<Board, 'id'>>,
+  userId: string
+) => {
   const boardRef = doc(db, 'boards', boardId);
+
+  // Get board data for validation
+  const boardSnap = await getDoc(boardRef);
+  if (!boardSnap.exists()) {
+    throw new Error('Board not found');
+  }
+  const boardData = boardSnap.data();
+
+  // Client-side validation: Check if user is owner or admin
+  const userRole = boardData?.members?.[userId];
+  if (boardData?.ownerId !== userId && userRole !== 'admin') {
+    throw new Error('User does not have permission to update this board');
+  }
+
+  // Filter out undefined values
+  const filteredUpdates = Object.entries(updates).reduce(
+    (acc, [key, value]) => {
+      if (value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    },
+    {} as Record<string, unknown>
+  );
+
   return await updateDoc(boardRef, {
-    ...updates,
+    ...filteredUpdates,
     updatedAt: serverTimestamp(),
   });
 };
@@ -331,34 +395,94 @@ export const deleteBoard = async (boardId: string) => {
   return await deleteDoc(boardRef);
 };
 
-// Get Boards (Real-time listener)
-export const listenToBoards = (callback: (boards: Board[]) => void) => {
-  const q = query(boardsCol, orderBy('createdAt', 'asc'));
-  return onSnapshot(q, (snapshot) => {
-    const boards = snapshot.docs.map((doc) => {
-      const createdAt = parseTimestamp(doc.data()?.createdAt);
-      const updatedAt = parseTimestamp(doc.data()?.updatedAt);
-      return { id: doc.id, ...doc.data(), createdAt, updatedAt } as Board;
-    });
-    callback(boards);
-  });
-};
-
 // Listen to user's boards (either as owner or member)
 export const listenToUserBoards = (userId: string, callback: (boards: Board[]) => void) => {
-  const q = query(boardsCol, orderBy('createdAt', 'desc'));
-  return onSnapshot(q, (snapshot) => {
-    const allBoards = snapshot.docs.map((doc) => {
-      const createdAt = parseTimestamp(doc.data()?.createdAt) || new Date();
-      const updatedAt = parseTimestamp(doc.data()?.updatedAt) || new Date();
-      return { id: doc.id, ...doc.data(), createdAt, updatedAt } as Board;
-    });
+  // Query boards where user is owner
+  const ownerQuery = query(boardsCol, where('ownerId', '==', userId), orderBy('createdAt', 'desc'));
 
-    // Filter boards where user is owner or a member
-    const userBoards = allBoards.filter(
-      (board) => board.ownerId === userId || userId in board.members
-    );
+  // Query boards where user is in memberIds array
+  const memberQuery = query(
+    boardsCol,
+    where('memberIds', 'array-contains', userId),
+    orderBy('createdAt', 'desc')
+  );
 
-    callback(userBoards);
-  });
+  let ownerBoards: Board[] = [];
+  let memberBoards: Board[] = [];
+  let ownerLoaded = false;
+  let memberLoaded = false;
+
+  const unsubscribeOwner = onSnapshot(
+    ownerQuery,
+    (snapshot) => {
+      ownerBoards = snapshot.docs.map((doc) => {
+        const createdAt = parseTimestamp(doc.data()?.createdAt) || new Date();
+        const updatedAt = parseTimestamp(doc.data()?.updatedAt) || new Date();
+        return { id: doc.id, ...doc.data(), createdAt, updatedAt } as Board;
+      });
+      ownerLoaded = true;
+
+      if (ownerLoaded && memberLoaded) {
+        // Merge and deduplicate boards
+        const boardMap = new Map<string, Board>();
+        [...ownerBoards, ...memberBoards].forEach((board) => {
+          boardMap.set(board.id, board);
+        });
+
+        // Client-side validation: Filter boards to ensure user is owner or in memberIds
+        const filteredBoards = Array.from(boardMap.values()).filter(
+          (board) => board.ownerId === userId || board.memberIds?.includes(userId)
+        );
+
+        callback(
+          filteredBoards.sort(
+            (a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)
+          )
+        );
+      }
+    },
+    (error) => {
+      console.error(`[Firestore] Failed to listen to owned boards for user "${userId}":`, error);
+    }
+  );
+
+  const unsubscribeMember = onSnapshot(
+    memberQuery,
+    (snapshot) => {
+      memberBoards = snapshot.docs.map((doc) => {
+        const createdAt = parseTimestamp(doc.data()?.createdAt) || new Date();
+        const updatedAt = parseTimestamp(doc.data()?.updatedAt) || new Date();
+        return { id: doc.id, ...doc.data(), createdAt, updatedAt } as Board;
+      });
+      memberLoaded = true;
+
+      if (ownerLoaded && memberLoaded) {
+        // Merge and deduplicate boards
+        const boardMap = new Map<string, Board>();
+        [...ownerBoards, ...memberBoards].forEach((board) => {
+          boardMap.set(board.id, board);
+        });
+
+        // Client-side validation: Filter boards to ensure user is owner or in memberIds
+        const filteredBoards = Array.from(boardMap.values()).filter(
+          (board) => board.ownerId === userId || board.memberIds?.includes(userId)
+        );
+
+        callback(
+          filteredBoards.sort(
+            (a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)
+          )
+        );
+      }
+    },
+    (error) => {
+      console.error(`[Firestore] Failed to listen to member boards for user "${userId}":`, error);
+    }
+  );
+
+  // Return combined unsubscribe function
+  return () => {
+    unsubscribeOwner();
+    unsubscribeMember();
+  };
 };

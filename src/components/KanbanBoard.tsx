@@ -4,7 +4,6 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { useTasksStore } from '@/store/useTasks';
 import { useUsersStore } from '@/store/useUsers';
 import { usePresenceStore } from '@/store/usePresence';
-import { useNotificationsStore } from '@/store/useNotifications';
 import { Plus, UserPlus, Users } from 'lucide-react';
 import {
   DropdownMenu,
@@ -48,9 +47,6 @@ export default function KanbanBoard({ boardId, boardName, members, ownerId }: Ka
 
   const currentUserId = auth.currentUser?.uid;
 
-  // Get member user objects
-  const memberUsers = users.filter((user) => user.uid in members);
-
   useEffect(() => {
     // Only set typing status if we have a valid task ID
     if (!dialogTask?.id) return;
@@ -68,13 +64,8 @@ export default function KanbanBoard({ boardId, boardName, members, ownerId }: Ka
 
   useEffect(() => {
     const unsubUsers = useUsersStore.getState().initListener();
-    const unsubNotifications =
-      (auth.currentUser?.uid &&
-        useNotificationsStore.getState().initListener(auth.currentUser.uid)) ||
-      (() => {});
     return () => {
       unsubUsers();
-      unsubNotifications();
     };
   }, []);
 
@@ -251,6 +242,7 @@ export default function KanbanBoard({ boardId, boardName, members, ownerId }: Ka
                   users={users}
                   ownerId={ownerId}
                   currentUserId={currentUserId || ''}
+                  boardId={boardId}
                 />
               </div>
             </DropdownMenuContent>

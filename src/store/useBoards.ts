@@ -56,14 +56,17 @@ export function useBoards(): BoardsState {
   );
 
   // Update an existing board
-  const updateBoard = useCallback(async (id: string, updates: Partial<Omit<Board, 'id'>>) => {
-    try {
-      await updateBoardInFirestore(id, updates);
-    } catch (error) {
-      console.error('Error updating board:', error);
-      throw error;
-    }
-  }, []);
+  const updateBoard = useCallback(
+    async (id: string, updates: Partial<Omit<Board, 'id'>>, userId: string) => {
+      try {
+        await updateBoardInFirestore(id, updates, userId);
+      } catch (error) {
+        console.error('Error updating board:', error);
+        throw error;
+      }
+    },
+    []
+  );
 
   // Delete a board
   const deleteBoard = useCallback(async (id: string) => {
