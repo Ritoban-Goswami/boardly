@@ -25,7 +25,7 @@ export default function PresenceAvatars() {
           // Exclude current user
           if (id === currentUser?.uid) return false;
           // Filter by board members if on a board page
-          if (boardMembers && !boardMembers.includes(id)) return false;
+          if (boardMembers && !(id in boardMembers)) return false;
           return true;
         })
         .map(([id, userData]) => ({

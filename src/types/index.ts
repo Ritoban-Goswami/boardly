@@ -1,3 +1,5 @@
+export type Role = 'admin' | 'editor' | 'viewer';
+
 export interface User {
   uid: string;
   email: string | null;
@@ -121,7 +123,7 @@ export interface Board {
   createdAt: TimestampLike;
   updatedAt: TimestampLike;
   ownerId: string;
-  members: string[];
+  members: Record<string, Role>; // Map of userId -> role
 }
 
 export interface BoardsState {

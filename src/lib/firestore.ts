@@ -15,7 +15,7 @@ import {
   where,
   arrayUnion,
 } from 'firebase/firestore';
-import type { User, Task, Board, AppNotification, ColumnId } from '@/types';
+import type { User, Task, Board, AppNotification, ColumnId, Role } from '@/types';
 
 // COLLECTION REFERENCE
 const boardsCol = collection(db, 'boards');
@@ -162,9 +162,14 @@ export const acceptBoardInvitation = async (
   const userData = userSnap.data();
   const userDisplayName = userData?.displayName || 'A user';
 
-  // Add user to board members
+  // Get current board data to add member with viewer role
+  const boardSnap = await getDoc(boardRef);
+  const boardData = boardSnap.data();
+  const currentMembers = boardData?.members || {};
+
+  // Add user to board members with viewer role
   await updateDoc(boardRef, {
-    members: arrayUnion(userId),
+    members: { ...currentMembers, [userId]: 'viewer' as Role },
     updatedAt: serverTimestamp(),
   });
 
@@ -173,8 +178,6 @@ export const acceptBoardInvitation = async (
 
   // Notify inviter that invitation was accepted
   if (inviterId) {
-    const boardSnap = await getDoc(boardRef);
-    const boardData = boardSnap.data();
     const boardName = boardData?.name || 'a board';
 
     await createNotification(
@@ -253,6 +256,66 @@ export const addBoard = async (values: Omit<Board, 'id' | 'createdAt' | 'updated
   return docRef.id;
 };
 
+// Helper: Add member to board with specific role
+export const addBoardMember = async (boardId: string, userId: string, role: Role) => {
+  const boardRef = doc(db, 'boards', boardId);
+  const boardSnap = await getDoc(boardRef);
+  const boardData = boardSnap.data();
+  const currentMembers = boardData?.members || {};
+
+  // Check if user is already a member
+  if (userId in currentMembers) {
+    throw new Error('User is already a member of this board');
+  }
+
+  await updateDoc(boardRef, {
+    members: { ...currentMembers, [userId]: role },
+    updatedAt: serverTimestamp(),
+  });
+};
+
+// Helper: Remove member from board
+export const removeBoardMember = async (boardId: string, userId: string) => {
+  const boardRef = doc(db, 'boards', boardId);
+  const boardSnap = await getDoc(boardRef);
+  const boardData = boardSnap.data();
+  const currentMembers = boardData?.members || {};
+
+  const { [userId]: removed, ...remainingMembers } = currentMembers;
+
+  await updateDoc(boardRef, {
+    members: remainingMembers,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+// Helper: Update member role
+export const updateBoardMemberRole = async (boardId: string, userId: string, newRole: Role) => {
+  const boardRef = doc(db, 'boards', boardId);
+  const boardSnap = await getDoc(boardRef);
+  const boardData = boardSnap.data();
+  const currentMembers = boardData?.members || {};
+
+  if (!(userId in currentMembers)) {
+    throw new Error('User is not a member of this board');
+  }
+
+  await updateDoc(boardRef, {
+    members: { ...currentMembers, [userId]: newRole },
+    updatedAt: serverTimestamp(),
+  });
+};
+
+// Helper: Get user's role on a board
+export const getUserBoardRole = async (boardId: string, userId: string): Promise<Role | null> => {
+  const boardRef = doc(db, 'boards', boardId);
+  const boardSnap = await getDoc(boardRef);
+  const boardData = boardSnap.data();
+  const members = boardData?.members || {};
+
+  return members[userId] || null;
+};
+
 // Update Board
 export const updateBoard = async (boardId: string, updates: Partial<Omit<Board, 'id'>>) => {
   const boardRef = doc(db, 'boards', boardId);
@@ -283,17 +346,19 @@ export const listenToBoards = (callback: (boards: Board[]) => void) => {
 
 // Listen to user's boards (either as owner or member)
 export const listenToUserBoards = (userId: string, callback: (boards: Board[]) => void) => {
-  const q = query(
-    boardsCol,
-    where('members', 'array-contains', userId),
-    orderBy('createdAt', 'desc')
-  );
+  const q = query(boardsCol, orderBy('createdAt', 'desc'));
   return onSnapshot(q, (snapshot) => {
-    const boards = snapshot.docs.map((doc) => {
+    const allBoards = snapshot.docs.map((doc) => {
       const createdAt = parseTimestamp(doc.data()?.createdAt) || new Date();
       const updatedAt = parseTimestamp(doc.data()?.updatedAt) || new Date();
       return { id: doc.id, ...doc.data(), createdAt, updatedAt } as Board;
     });
-    callback(boards);
+
+    // Filter boards where user is owner or a member
+    const userBoards = allBoards.filter(
+      (board) => board.ownerId === userId || userId in board.members
+    );
+
+    callback(userBoards);
   });
 };

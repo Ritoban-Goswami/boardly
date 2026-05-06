@@ -19,7 +19,7 @@ import { InviteModal } from './InviteModal';
 import { BoardMembersList } from './BoardMembersList';
 import { cn } from '@/lib/utils';
 import { auth } from '@/lib/firebase';
-import type { Task, ColumnId, TaskViewer, TaskUpdate } from '@/types';
+import type { Task, ColumnId, TaskViewer, TaskUpdate, Role } from '@/types';
 import React from 'react';
 
 const columns = [
@@ -31,7 +31,7 @@ const columns = [
 interface KanbanBoardProps {
   boardId: string;
   boardName: string;
-  members: string[];
+  members: Record<string, Role>;
   ownerId: string;
 }
 
@@ -49,7 +49,7 @@ export default function KanbanBoard({ boardId, boardName, members, ownerId }: Ka
   const currentUserId = auth.currentUser?.uid;
 
   // Get member user objects
-  const memberUsers = users.filter((user) => members.includes(user.uid));
+  const memberUsers = users.filter((user) => user.uid in members);
 
   useEffect(() => {
     // Only set typing status if we have a valid task ID
@@ -247,7 +247,8 @@ export default function KanbanBoard({ boardId, boardName, members, ownerId }: Ka
             <DropdownMenuContent align="end" className="w-80 p-0">
               <div className="p-4">
                 <BoardMembersList
-                  members={memberUsers}
+                  members={members}
+                  users={users}
                   ownerId={ownerId}
                   currentUserId={currentUserId || ''}
                 />
