@@ -1,6 +1,7 @@
 'use client';
 
 import { Bell } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -20,6 +21,7 @@ import { auth } from '@/lib/firebase';
 import type { AppNotification } from '@/types';
 
 export default function NotificationIcon() {
+  const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
@@ -56,6 +58,8 @@ export default function NotificationIcon() {
 
     try {
       await acceptBoardInvitation(notificationId, userId, notification.boardId);
+      // Redirect to the board after accepting invitation
+      router.push(`/board/${notification.boardId}`);
     } catch (error) {
       console.error('Failed to accept invitation:', error);
     }

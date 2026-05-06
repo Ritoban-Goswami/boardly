@@ -9,24 +9,25 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import PresenceAvatars from './PresenceAvatars';
 import NotificationIcon from './NotificationIcon';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { getInitials, stringToColor } from '@/lib/utils';
 import { ThemeToggle } from './theme-toggle';
 import { usePresenceStore } from '@/store/usePresence';
+import { useNotificationsStore } from '@/store/useNotifications';
 import { CreateBoardModal } from './CreateBoardModal';
 
 export default function Navbar() {
   const router = useRouter();
   const [user] = useAuthState(auth);
   const { removeUserPresence } = usePresenceStore();
+  const { initListener: initNotifications } = useNotificationsStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const handleLogout = useCallback(async () => {
@@ -36,6 +37,14 @@ export default function Navbar() {
     await signOut(auth);
     router.push('/auth/login');
   }, [router, user, removeUserPresence]);
+
+  // Initialize notification listener
+  useEffect(() => {
+    if (user) {
+      const unsub = initNotifications(user.uid);
+      return unsub;
+    }
+  }, [user, initNotifications]);
 
   return (
     <>

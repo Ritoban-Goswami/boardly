@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +35,7 @@ export function EditBoardModal({ open, onOpenChange, board }: EditBoardModalProp
   const [selectedColor, setSelectedColor] = useState('bg-blue-500');
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [user] = useAuthState(auth);
   const { updateBoard } = useBoards();
 
   // Pre-populate form when board changes
@@ -53,11 +56,17 @@ export function EditBoardModal({ open, onOpenChange, board }: EditBoardModalProp
     setError(null);
 
     try {
-      await updateBoard(board.id, {
-        name: name.trim(),
-        description: description.trim() || undefined,
-        color: selectedColor,
-      });
+      if (!user) throw new Error('User not authenticated');
+
+      await updateBoard(
+        board.id,
+        {
+          name: name.trim(),
+          description: description.trim() || undefined,
+          color: selectedColor,
+        },
+        user.uid
+      );
 
       // Close modal
       onOpenChange(false);

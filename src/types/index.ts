@@ -124,6 +124,7 @@ export interface Board {
   updatedAt: TimestampLike;
   ownerId: string;
   members: Record<string, Role>; // Map of userId -> role
+  memberIds?: string[]; // Array of member IDs for indexed queries (computed from members)
 }
 
 export interface BoardsState {
@@ -131,6 +132,6 @@ export interface BoardsState {
   loading: boolean;
   initListener: () => () => void;
   createBoard: (data: Omit<Board, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>;
-  updateBoard: (id: string, updates: Partial<Omit<Board, 'id'>>) => Promise<void>;
+  updateBoard: (id: string, updates: Partial<Omit<Board, 'id'>>, userId: string) => Promise<void>;
   deleteBoard: (id: string) => Promise<void>;
 }
