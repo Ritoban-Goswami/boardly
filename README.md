@@ -12,11 +12,14 @@ A modern, real-time collaborative task management board application built with N
 
 ## Features
 
+- **Multi-Board Support**: Create and manage multiple boards with dynamic routing (`/board/[id]`)
+- **Board Management**: Create, edit, delete, and switch between boards with color customization
+- **Team Collaboration**: Invite members to boards with role-based access control (Admin, Editor, Viewer)
 - **Real-time Collaboration**: Live presence indicators and typing status via Realtime DB; task updates via Firestore
 - **Interactive Kanban Board**: Drag-and-drop interface with @hello-pangea/dnd for ordering tasks within and across columns
 - **User Authentication**: Secure signup and login with Firebase Authentication
 - **Task Management**: Create, edit, and delete tasks with title, description, priority (low/medium/high), labels, and assignments
-- **In-app Notifications**: Real-time notification system for task assignments, status changes, and team activity
+- **In-app Notifications**: Real-time notification system for task assignments, board invitations, status changes, and team activity
 - **Presence Indicators**: See who's online with avatar stack in the navbar
 - **Typing Indicators**: See when other users are editing a task
 - **Responsive Design**: Mobile-friendly UI with Tailwind CSS v4
@@ -114,30 +117,46 @@ A modern, real-time collaborative task management board application built with N
 src/
 ├── app/                    # App router pages and layouts
 │   ├── (protected)/        # Protected routes (require authentication)
-│   │   └── board/          # Main board page
-│   └── auth/               # Authentication pages
-│       ├── login/          # Login page
-│       └── signup/         # Signup page
+│   │   └── board/          # Board routes
+│   │       └── [id]/       # Dynamic board page with board ID
+│   ├── auth/               # Authentication pages
+│   │   ├── login/          # Login page
+│   │   └── signup/         # Signup page
+│   ├── layout.tsx          # Root layout with providers
+│   └── page.tsx            # Landing page
 ├── components/             # Reusable UI components
 │   ├── ui/                 # shadcn/ui components (Button, Card, Dialog, etc.)
+│   ├── BoardSwitcher.tsx   # Board selection and switching
+│   ├── CreateBoardModal.tsx # Create new board modal
+│   ├── EditBoardModal.tsx  # Edit board details modal
+│   ├── DeleteDialog.tsx    # Confirmation dialog for deletions
+│   ├── BoardMembersList.tsx # Board member management
+│   ├── InviteModal.tsx     # Invite users to board modal
 │   ├── KanbanBoard.tsx     # Main drag-and-drop board
 │   ├── TaskCard.tsx        # Task card with priority badges
 │   ├── TaskDialog.tsx      # Add/Edit task modal
 │   ├── PresenceAvatars.tsx # Online user indicators
 │   ├── NotificationIcon.tsx # Notification dropdown
-│   └── ...
+│   ├── NotificationDialog.tsx # Notification details modal
+│   ├── Navbar.tsx          # Navigation bar
+│   ├── ProtectedRoute.tsx  # Route protection wrapper
+│   ├── LoginForm.tsx       # Login form component
+│   ├── SignUpForm.tsx      # Signup form component
+│   ├── theme-provider.tsx  # Theme context provider
+│   └── theme-toggle.tsx    # Dark mode toggle button
 ├── lib/                    # Utility functions and configurations
 │   ├── firebase.ts         # Firebase initialization
-│   ├── firestore.ts        # Firestore database operations
-│   ├── realtime.ts         # Realtime database operations
+│   ├── firestore.ts        # Firestore database operations (boards, tasks, notifications)
+│   ├── realtime.ts         # Realtime database operations (presence, typing)
 │   └── utils.ts            # Utility helpers (cn, getInitials, etc.)
 ├── store/                  # Zustand stores
+│   ├── useBoards.ts        # Board management store
 │   ├── useTasks.ts         # Task management store
 │   ├── usePresence.ts      # Online presence store
 │   ├── useNotifications.ts # Notifications store
 │   └── useUsers.ts         # Users store
 └── types/                  # TypeScript type definitions
-    └── index.ts            # All interfaces and types
+    └── index.ts            # All interfaces and types (Board, Task, Role, etc.)
 ```
 
 ## Key Implementation Details
@@ -151,6 +170,7 @@ src/
 ### State Management
 
 - **Zustand stores** for modular state management:
+  - `useBoards.ts` - Firestore board CRUD with real-time listeners
   - `useTasks.ts` - Firestore task CRUD with real-time listeners
   - `usePresence.ts` - Realtime DB for online status and typing indicators
   - `useNotifications.ts` - User notification management
@@ -167,28 +187,29 @@ src/
 
 ## Upcoming Features
 
-### Role-Based Access Control
-
-- **Roles**: Admin, Editor, and Viewer permissions
-- **Admin Privileges**: Add/remove collaborators, manage boards
-- **Editor Access**: Comment and move tasks (no user management)
-- **Viewer Mode**: Read-only access to tasks
-- _Goal_: Implement secure front-end RBAC design
-
 ### Collaboration Enhancements
 
 - Real-time commenting on tasks
-- In-app notifications for assignments and mentions
 - Activity log with task history tracking
+- Task mentions and @mentions in comments
 - _Goal_: Improve collaborative UX with real-time interactions
 
 ### Advanced Functionality
 
 - Integrated chat for team communication
-- Analytics dashboard with task metrics
+- Analytics dashboard with task metrics and board insights
 - Offline support with optimistic UI updates
 - Calendar integration with email reminders
+- File attachments for tasks
+- Task templates and recurring tasks
 - _Goal_: Extend beyond basic kanban with powerful team features
+
+### Security & Permissions
+
+- Enhanced role-based access control enforcement
+- Audit logs for board and task changes
+- Two-factor authentication support
+- _Goal_: Strengthen security and compliance
 
 ## Contributing
 
