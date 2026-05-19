@@ -185,6 +185,173 @@ src/
 - Memoized components to prevent unnecessary re-renders
 - Server-side rendering for improved initial load performance
 
+## Why This Project Exists
+
+Boardly was built to simulate real-world collaborative tools like Trello and Linear with real-time sync and scalable architecture. The goal is to demonstrate production-level system design, real-time collaboration patterns, and full-stack engineering capabilities required for remote and product engineering roles.
+
+This project serves as a flagship example of:
+
+- **Real-time systems**: Implementing live collaboration with presence tracking and instant updates
+- **Collaboration architecture**: Multi-user workflows with role-based access control
+- **Backend + frontend ownership**: Complete end-to-end feature development from database modeling to UI implementation
+- **Product mindset**: Building features that solve real team collaboration problems
+
+## Architecture Decisions
+
+### Firestore vs Realtime Database Split
+
+**Decision**: Use Firestore for persistent data (boards, tasks, users) and Realtime Database for ephemeral state (presence, typing indicators).
+
+**Trade-offs**:
+
+- **Firestore**: Chosen for its powerful querying capabilities, automatic scaling, and offline support. Ideal for structured data that requires complex queries and strong consistency.
+- **Realtime Database**: Selected for its low-latency, real-time sync capabilities. Perfect for high-frequency updates like presence and typing indicators where milliseconds matter.
+
+This hybrid approach optimizes for both data consistency (Firestore) and real-time responsiveness (Realtime DB).
+
+### Zustand vs Redux
+
+**Decision**: Use Zustand for state management instead of Redux.
+
+**Trade-offs**:
+
+- **Zustand advantages**: Minimal boilerplate, no providers needed, simpler mental model, better TypeScript support, and smaller bundle size. For this project's scale, Redux's complexity wasn't justified.
+- **When Redux would be better**: For very large applications with complex middleware requirements, time-travel debugging needs, or teams already familiar with Redux patterns.
+
+Zustand enables rapid development while maintaining clean, maintainable state management patterns.
+
+### Optimistic UI Updates
+
+**Decision**: Implement optimistic updates for all user actions (drag-and-drop, task creation, edits).
+
+**Trade-offs**:
+
+- **Benefits**: Instant feedback improves perceived performance and user experience. Critical for collaborative tools where latency is noticeable.
+- **Complexity**: Requires careful error handling and rollback logic. Must sync with server state to handle conflicts.
+- **Implementation**: Uses local state updates immediately, then syncs to Firebase. On failure, reverts changes and shows error notifications.
+
+This approach prioritizes user experience while maintaining data integrity through proper error recovery.
+
+## Challenges Solved
+
+### Real-time Sync Conflicts
+
+**Problem**: Multiple users editing the same task or board simultaneously can cause data conflicts and lost updates.
+
+**Solution**:
+
+- Firestore's automatic conflict resolution with last-write-wins strategy
+- Optimistic UI updates with server confirmation
+- Real-time listeners that sync state across all clients
+- Transactional updates for critical operations
+
+### Presence Tracking
+
+**Problem**: Accurately showing which users are online and where they're working in real-time.
+
+**Solution**:
+
+- Firebase Realtime Database connections with automatic cleanup on disconnect
+- `.info/connected` listener to detect connection state
+- OnDisconnect handlers to remove presence when users close tabs or lose connection
+- Debounced presence updates to reduce database load
+
+### Performance Optimization
+
+**Problem**: Real-time listeners and frequent updates can cause performance bottlenecks.
+
+**Solution**:
+
+- Selective Firestore queries with proper indexing
+- Memoized React components to prevent unnecessary re-renders
+- Efficient Zustand store subscriptions
+- Code splitting with dynamic imports
+- Optimized drag-and-drop with @hello-pangea/dnd
+
+### Multi-Board Data Isolation
+
+**Problem**: Ensuring users only access boards they're authorized to see, with proper data segregation.
+
+**Solution**:
+
+- Board-specific data structure with boardId as a required field
+- Firestore security rules that enforce ownership and membership checks
+- Client-side filtering based on user's board memberships
+- Route protection with authentication and authorization checks
+
+## System Design Notes
+
+### Data Modeling Decisions
+
+**Board Collection Structure**:
+
+```
+boards/
+  └── {boardId}
+      ├── name: string
+      ├── color: string
+      ├── ownerId: string
+      ├── createdAt: timestamp
+      └── members: array of { userId, role }
+```
+
+**Task Collection Structure**:
+
+```
+tasks/
+  └── {taskId}
+      ├── boardId: string (for partitioning)
+      ├── title: string
+      ├── description: string
+      ├── status: string
+      ├── priority: string
+      ├── labels: array
+      ├── assigneeId: string
+      ├── createdBy: string
+      ├── createdAt: timestamp
+      └── updatedAt: timestamp
+```
+
+This structure enables efficient queries per board while maintaining scalability.
+
+### Scaling Considerations
+
+**Current Limitations**:
+
+- Single Firebase project (no multi-tenancy)
+- No pagination for large task lists
+- Presence tracking scales linearly with active users
+
+**Future Scaling**:
+
+- Implement pagination for tasks (cursor-based)
+- Add Firebase indexes for complex queries
+- Consider Cloud Functions for data aggregation
+- Implement rate limiting for API calls
+- Add caching layer for frequently accessed data
+
+### Security Rules Design
+
+Firestore security rules enforce:
+
+- **Authentication**: All read/write operations require authenticated users
+- **Authorization**: Users can only access boards they're members of
+- **Role-based permissions**: Admins can manage members, Editors can modify tasks, Viewers have read-only access
+- **Data validation**: Enforce required fields and valid data types
+
+Example rule pattern:
+
+```
+match /boards/{boardId} {
+  allow read: if request.auth != null &&
+    isMember(boardId) || isOwner(boardId);
+  allow write: if request.auth != null &&
+    isOwner(boardId);
+}
+```
+
+This ensures security is enforced at the database level, not just in the frontend.
+
 ## Upcoming Features
 
 ### Collaboration Enhancements
